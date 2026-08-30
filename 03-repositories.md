@@ -1,6 +1,6 @@
 # 03 — Repositories
 
-> Last updated: 2026-08-24. All repos clean on `main`.
+> Last updated: 2026-08-30. All repos clean on `main`.
 
 | Repo | Role | Status | Key paths |
 |---|---|---|---|
@@ -18,7 +18,7 @@
 | **playos-cloud** | Cloud backend (post-MVP) | Early | — |
 | **playos-marketplace** | Store/marketplace (post-MVP) | Early | — |
 | **playos-foundation** | Website/org site | Docs | — |
-| **playos-memorymap** | This map (docs only, not a git repo) | — | — |
+| **playos-memorymap** | This map (docs; its own git repo) | Active | — |
 
 ## Dependency flow
 

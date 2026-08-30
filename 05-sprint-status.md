@@ -1,20 +1,21 @@
 # 05 — Sprint Status
 
-> **Last updated: 2026-08-24** — definitive as of Sprints 11.5, 11.6, and 12 all closed (validated on-device).
+> **Last updated: 2026-08-30** — definitive as of Sprints 11.5, 11.6, 12, and 13 all closed (validated on-device).
 > Specs live in `playos-spec/src/sprints/`; this file summarizes state and evidence.
 
 ## Head SHAs (all repos clean on `main`)
 
 | Repo | HEAD |
 |---|---|
-| playos-spec | `b937a95` spec: Sprint 13 task grid progress + hardware matrix/backend portability docs |
-| playos-init | `41c071b` init: Sprint 13 T5 vendor-agnostic hwmon name matchers |
-| playos-compositor | `195664c` compositor: Sprint 13 T1 GPU-selection scoring extraction + unit test |
+| playos-spec | `731d7b6` spec: input-handling §3.2 now covers both DB paths (shell port) |
+| playos-init | `8afc134` init: refuse internal-disk playos-data in installer mode |
+| playos-compositor | `8efd749` compositor: wire playos_gpu_select_index into gpu_discovery (single source of truth) |
 | playos-runtime | `fbc1603` runtime: control-socket policy test (S12-T6) |
-| playos-refdistro | `2d0fee5` versions.lock: bump spec/compositor/platform-api/init to Sprint 13 T1+T5 commits |
-| playos-platform-api | `d9d5bae` platform-api: Sprint 13 T5 vendor-agnostic hwmon readers (i915/coretemp) |
-| playos-shell | `dde9f57` shell: terminate running game on B (exit fix) |
+| playos-refdistro | `65e4102` installer: sync before reboot + bump playos-init pin |
+| playos-platform-api | `a217562` platform-api: prefer Sony/DualSense/DualShock names during gamepad discovery |
+| playos-shell | `f481b2b` shell: use SDL_GameControllerDB in trusted evdev path (S13.6 shell port) |
 | playos-samples | `2aaec17` fix cel shading white car |
+| playos-raylib | `dbc56a8` (6.0 tag, pinned in versions.lock) |
 | others | unchanged (docs/cloud) |
 
 ## Sprints 0–11: complete
@@ -90,6 +91,13 @@ system-button/lifecycle, and SSH log capture for the explicit `0x8086`/Mesa-Iris
 strings (no USB-C Ethernet adapter yet). AMD regression re-run still pending.
 Evidence tracked in `playos-spec/src/sprints/Sprint-13.md` (spec `e874c13`,
 pin bumped `be600a0`).
+
+**Closed 2026-08-30.** S13.6 (shared SDL_GameControllerDB mapping DB + Sony
+DualSense/DualShock preferred names) landed in platform-api `a217562`, shell
+`f481b2b`, and spec `731d7b6`. Also this session: init `8afc134` hardens the
+installer by refusing a `playos-data` on an internal/install-target disk (sysfs
+`removable` flag replaces the `nvme`/`mmcblk` heuristic), and refdistro `65e4102`
+syncs before reboot + bumps the init pin.
 
 ## Where each sprint's detail lives
 

@@ -1,20 +1,22 @@
 # 09 — Next Steps & How to Resume
 
-> Last updated: 2026-08-24
+> Last updated: 2026-08-30
 
 ## Where we are
 
-Sprints 0–12 are complete and validated on-device (including 11.5, 11.6, and 12).
-The next sprint is **Sprint 13 (Intel expansion)**. Read
-[`05-sprint-status.md`](05-sprint-status.md) for the current head SHAs and evidence.
+Sprints 0–13 are complete and validated on-device (including 11.5, 11.6, 12,
+and 13). Read [`05-sprint-status.md`](05-sprint-status.md) for the current head
+SHAs and evidence. Sprint 14 (Production Readiness) is next — see
+`playos-spec/src/sprints/Sprint-14.md`.
 
-## Next up: Sprint 13 (Intel expansion)
+## Next up: Sprint 14 (Production Readiness)
 
-1. Read `playos-spec/src/sprints/Sprint-13.md` first — it is authored and aligned
-   with the implemented scoring model and evdev input backend.
+1. Read `playos-spec/src/sprints/Sprint-14.md` first — it freezes the public
+   `libplayos` API, automates the signed release pipeline, and smoke-tests the
+   preview release on ROG Ally.
 2. Follow the spec-first workflow in [`06-conventions.md`](06-conventions.md):
    implement, update the spec in the same change set, then validate in QEMU and
-   (where possible) on the Intel/NVIDIA laptop target.
+   (where possible) on the ROG Ally target.
 
 ## Housekeeping
 
