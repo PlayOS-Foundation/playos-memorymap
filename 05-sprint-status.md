@@ -7,13 +7,13 @@
 
 | Repo | HEAD |
 |---|---|
-| playos-spec | `b68509a` spec: Sprint 14 T10 — installer as PlayOS app with console-free seamless handoff |
-| playos-init | `53fc75a` init: preserve dev SSH key to /tmp before /data unmount in installer handoff (S13.7) |
+| playos-spec | `99f8a93` spec: S14 task grid + docs (T6/T7/T8 done, T9/T10 in progress) |
+| playos-init | `49fd28e` init: recovery UI + button-hold + console-free installer handoff (S14 T6/T10) |
 | playos-compositor | `8efd749` compositor: wire playos_gpu_select_index into gpu_discovery (single source of truth) |
 | playos-runtime | `85acbb9` runtime: playos_trusted_start_installer wrapper (S13.7 T1) |
-| playos-refdistro | `84a4559` ci: intel check forbids GPU drivers only; amd-pstate is CPUFreq forced by Kconfig select |
-| playos-platform-api | `a217562` platform-api: prefer Sony/DualSense/DualShock names during gamepad discovery |
-| playos-shell | `fb7b978` shell: payload detection only on removable disks (ignore internal NVMe playos-a) (S13.7 T3) |
+| playos-refdistro | `4e70f34` versions.lock: bump spec/platform-api/init/shell to S14 commits |
+| playos-platform-api | `f3e629c` platform-api: Doxygen docs + examples + getting-started (S14 T3) |
+| playos-shell | `e3c0091` shell: recovery menu (S14 T6) |
 | playos-samples | `2aaec17` fix cel shading white car |
 | playos-raylib | `dbc56a8` (6.0 tag, pinned in versions.lock) |
 | others | unchanged (docs/cloud) |
@@ -117,6 +117,15 @@ kernel check forbids GPU drivers only (`X86_AMD_PSTATE` is a CPUFreq driver forc
 by Kconfig `select` and is intentionally not gated).
 Sprint 14 in progress; S14-T10 adds "installer as a PlayOS app with console-free
 seamless handoff" (spec `b68509a`).
+
+**Sprint 14 implementation (2026-09-01).** T1/T2 API freeze already done;
+T3 docs (`f3e629c`), T4/T9 release pipeline + SDK tarball (`acb7fe8`),
+T5 MVP smoke checklist (`24dd9c8` + `c6fc07e`), T6 recovery core with
+Vol-Down-hold (`1729329`, `e3c0091`), T7 perf baseline (`63a4d67` +
+`59e3fd4`), T8 spec docs + ADRs (`182b138`), T10 console-free installer
+handoff + splash (`49fd28e`, `1a7ace4`). Pins bumped in refdistro
+`4e70f34`. Remaining: T9/T10 shell front-end polish, on-device smoke +
+perf runs, SimpleDRM recovery validation.
 
 ## Where each sprint's detail lives
 
