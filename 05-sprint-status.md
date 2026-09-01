@@ -1,19 +1,19 @@
 # 05 — Sprint Status
 
-> **Last updated: 2026-08-30** — definitive as of Sprints 11.5, 11.6, 12, and 13 all closed (validated on-device).
+> **Last updated: 2026-09-01** — Sprints 11.5, 11.6, 12, 13, 13.6, and 13.7 all closed (validated on-device). Sprint 14 in progress (production readiness).
 > Specs live in `playos-spec/src/sprints/`; this file summarizes state and evidence.
 
 ## Head SHAs (all repos clean on `main`)
 
 | Repo | HEAD |
 |---|---|
-| playos-spec | `731d7b6` spec: input-handling §3.2 now covers both DB paths (shell port) |
-| playos-init | `8afc134` init: refuse internal-disk playos-data in installer mode |
+| playos-spec | `b68509a` spec: Sprint 14 T10 — installer as PlayOS app with console-free seamless handoff |
+| playos-init | `53fc75a` init: preserve dev SSH key to /tmp before /data unmount in installer handoff (S13.7) |
 | playos-compositor | `8efd749` compositor: wire playos_gpu_select_index into gpu_discovery (single source of truth) |
-| playos-runtime | `fbc1603` runtime: control-socket policy test (S12-T6) |
-| playos-refdistro | `65e4102` installer: sync before reboot + bump playos-init pin |
+| playos-runtime | `85acbb9` runtime: playos_trusted_start_installer wrapper (S13.7 T1) |
+| playos-refdistro | `84a4559` ci: intel check forbids GPU drivers only; amd-pstate is CPUFreq forced by Kconfig select |
 | playos-platform-api | `a217562` platform-api: prefer Sony/DualSense/DualShock names during gamepad discovery |
-| playos-shell | `f481b2b` shell: use SDL_GameControllerDB in trusted evdev path (S13.6 shell port) |
+| playos-shell | `fb7b978` shell: payload detection only on removable disks (ignore internal NVMe playos-a) (S13.7 T3) |
 | playos-samples | `2aaec17` fix cel shading white car |
 | playos-raylib | `dbc56a8` (6.0 tag, pinned in versions.lock) |
 | others | unchanged (docs/cloud) |
@@ -98,6 +98,25 @@ DualSense/DualShock preferred names) landed in platform-api `a217562`, shell
 installer by refusing a `playos-data` on an internal/install-target disk (sysfs
 `removable` flag replaces the `nvme`/`mmcblk` heuristic), and refdistro `65e4102`
 syncs before reboot + bumps the init pin.
+
+**Closed 2026-09-01.** S13.7 (Live-USB / Installer Image Consolidation) is done
+end-to-end: runtime installer handoff (init `5bd4575`…`53fc75a`), shell Settings
+install action (df6ea9d…fb7b978), refdistro image consolidation (18d95a3…),
+and T7 validation — QEMU headless runtime-install **PASSED** plus on-device ROG
+Ally: live USB boots without slot pivot (ESP live-USB marker), Settings install
+works, reboot into installed NVMe, dev SSH key auto-seeded and SSH reachable.
+Spec `Sprint-13.7.md` T7 done (spec `2dd083e`, pin updated in refdistro).
+
+**Dev release `dev-v0.3.0` (2026-09-01).** Pushed tag `dev-v0.3.0` →
+`PlayOS Dev Images Release` workflow builds and publishes
+`playos-ally-dev-usb.img.xz`, `playos-intel-dev-usb.img.xz`, and
+`playos-ally-prod-usb.img.xz` + SHA256 as a GitHub pre-release.
+CI notes: workflows now run on `ubuntu-24.04` (host-mesa3d needs GCC > 22.04),
+`actions/cache` covers Buildroot `dl/` + per-board host toolchains, and the Intel
+kernel check forbids GPU drivers only (`X86_AMD_PSTATE` is a CPUFreq driver forced
+by Kconfig `select` and is intentionally not gated).
+Sprint 14 in progress; S14-T10 adds "installer as a PlayOS app with console-free
+seamless handoff" (spec `b68509a`).
 
 ## Where each sprint's detail lives
 
