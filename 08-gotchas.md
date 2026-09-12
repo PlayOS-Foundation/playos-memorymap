@@ -56,6 +56,18 @@
   `mkdir("/mnt/...")`, which fails with EROFS when the root is the installed
   squashfs — mount check points under `/run`.
 
+## Installer handoff
+
+- **Do not tear the session down to install.** The S13.7 handoff stopped the
+  compositor only so `/data` could be unmounted; that cost a DRM modeset blink
+  (a black flash) and silently discarded the installer's log. Now only the UI
+  clients make way, the compositor keeps running (the installer claims the shell
+  role, freed when the shell dies) and `/data` stays mounted; `/EFI` is released
+  only when it is on the install target. A failed install hands the session back
+  to the shell instead of rebooting.
+- The installer must **look like the shell** (same Silkscreen font, navy
+  palette, 15% column) — otherwise the handoff reads as a different app.
+
 ## Shell rendering
 
 - **Every screen must clear the frame first** (`render_begin_frame()`), because
