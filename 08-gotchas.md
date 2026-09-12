@@ -3,6 +3,26 @@
 > Last updated: 2026-09-12. These are the things that have already bitten
 > someone on this project. Read before debugging.
 
+## Input / reserved buttons
+
+- **The Ally's reserved buttons are momentary pulses — no hold gestures.** A raw
+  evdev trace (2026-09-12) shows the Command Center button emitting `KEY_F16`
+  press **and** release within the same shell poll (~1 ms apart), and Armoury
+  Crate emitting `KEY_PROG1` the same way. Physically holding either button
+  changes nothing, so `shell_input_button_held()` can never observe them — a
+  "hold COMMAND" gesture is impossible on this hardware. Use the edge query
+  `shell_input_button_pressed()`, which explicitly catches a press+release that
+  lands inside one poll. Contrast: the volume keys on the vendor node
+  (`KEY_VOLUMEUP/DOWN`) *do* report sustained presses (288–321 ms measured), so
+  the shell can see holds when a device produces them.
+- **"button 0x… pressed" log lines come from the query, not the event.** They
+  are emitted inside `shell_input_button_pressed()`, so a button that no screen
+  queries logs nothing. Absence of a line does not prove the button never fired.
+  Log explicitly in the action handler instead (the screenshot path now logs
+  `screenshot requested (ARMOURY CRATE|COMMAND)`).
+- Reserved vendor keys are opened by the shell as *roles* (`asus`, `vendor`,
+  `power`); the raw-debug lines print the role, not the device name.
+
 ## Boot / init
 
 - **Kernel config drops dependencies silently.** The Ally kernel once lost its

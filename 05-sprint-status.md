@@ -7,13 +7,13 @@
 
 | Repo | HEAD |
 |---|---|
-| playos-spec | `90ab490` spec: screenshots + init IPC wait + compositor screencopy (S14) |
+| playos-spec | `579d862` spec: ARMOURY CRATE screenshot gesture; hold-COMMAND impossible (S14) |
 | playos-init | `3c7309d` init: poll-based IPC wait (removes 1s control latency) (S14) |
 | playos-compositor | `f20597b` compositor: wlr-screencopy manager for screenshots (S14) |
 | playos-runtime | `01c193b` runtime: playos_trusted_rollback_slot wrapper (S14) |
-| playos-refdistro | `bafdb59` versions.lock: bump init/compositor/shell/spec (S14) |
+| playos-refdistro | `7862b3c` versions.lock: shell gesture fix + spec (S14) |
 | playos-platform-api | `f3e629c` platform-api: Doxygen docs + examples + getting-started (S14 T3) |
-| playos-shell | `3f72c2f` shell: full-output screenshots + hold-COMMAND gesture (S14) |
+| playos-shell | `ec0f9e5` shell: screenshots on ARMOURY CRATE tap; edge-triggered gestures (S14) |
 | playos-samples | `2aaec17` fix cel shading white car |
 | playos-raylib | `dbc56a8` (6.0 tag, pinned in versions.lock) |
 | playos-tools | `f46f512` sdk: toolchain/pkg-config/profile scripts + docs (S15-T4 scaffolding) |
@@ -190,6 +190,18 @@ in-game. Root causes/fixes:
 - Known gap: in-game captures have no on-screen feedback (the shell surface
   is hidden); only a log line. Also `playos-overlay-spec.md` still describes
   aspirational UI not in the implementation.
+
+**Gesture correction (same day, after on-device test).** The hold-COMMAND
+gesture never worked: a raw evdev trace showed the Ally's Command Center button
+emits `KEY_F16` press **and** release inside one poll (~1 ms apart) — a
+momentary pulse with no sustained state, so `shell_input_button_held()` could
+never see it. That also regressed the in-game COMMAND tap → pause overlay,
+which had used the edge query. Fixed in shell `ec0f9e5`: gestures are now
+edge-triggered and **ARMOURY CRATE (`SYSTEM`, reserved and otherwise unbound)
+takes the screenshot anywhere**, while COMMAND keeps the pause overlay in game
+and the screenshot on the shell UI. Added an explicit
+`screenshot requested (…)` log line and a 0.4 s debounce. See
+[`08-gotchas.md`](08-gotchas.md) for the input lessons.
 
 Still open on-device: SimpleDRM/low-graphics recovery (F3), the 19-criterion
 MVP smoke, and the perf baseline.
