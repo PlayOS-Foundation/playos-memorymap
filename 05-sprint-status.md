@@ -7,13 +7,13 @@
 
 | Repo | HEAD |
 |---|---|
-| playos-spec | `f888d29` overlay spec: quick-menu focus list; B resumes, Quit is a held-A item (S14) |
-| playos-init | `0094e83` init: RollbackSlot IPC + non-blocking late recovery watch (S14) |
-| playos-compositor | `6fd8f63` compositor: overlay about_to_hide on visibility reset (S14) |
+| playos-spec | `90ab490` spec: screenshots + init IPC wait + compositor screencopy (S14) |
+| playos-init | `3c7309d` init: poll-based IPC wait (removes 1s control latency) (S14) |
+| playos-compositor | `f20597b` compositor: wlr-screencopy manager for screenshots (S14) |
 | playos-runtime | `01c193b` runtime: playos_trusted_rollback_slot wrapper (S14) |
-| playos-refdistro | `8424797` overlay: pause menu focus list; B resumes, Quit is hold-A (S14) |
+| playos-refdistro | `bafdb59` versions.lock: bump init/compositor/shell/spec (S14) |
 | playos-platform-api | `f3e629c` platform-api: Doxygen docs + examples + getting-started (S14 T3) |
-| playos-shell | `1bc7403` shell: recovery rollback via RollbackSlot IPC (S14) |
+| playos-shell | `3f72c2f` shell: full-output screenshots + hold-COMMAND gesture (S14) |
 | playos-samples | `2aaec17` fix cel shading white car |
 | playos-raylib | `dbc56a8` (6.0 tag, pinned in versions.lock) |
 | playos-tools | `f46f512` sdk: toolchain/pkg-config/profile scripts + docs (S15-T4 scaffolding) |
@@ -166,6 +166,30 @@ menu. Quit Game is item-only and requires holding A ~0.9 s (progress readout);
 `poll_input` now tracks A's held state for that. Profile opens from the menu
 item instead of the old d-pad L/R modifier; volume moved from Up/Down to
 Left/Right. refdistro `8424797`, spec `f888d29`.
+
+**Full-output screenshots + IPC latency (2026-09-12).** Two on-device
+complaints: screenshots could never show the game, and COMMAND felt slow
+in-game. Root causes/fixes:
+
+- Screenshots read the shell's own framebuffer (`LoadImageFromScreen`) and
+  never ran while a game was foreground. The compositor now exposes
+  wlroots' `zwlr_screencopy_manager_v1` (`f20597b`) and the shell captures
+  the composited output from it (`src/screencopy.c`, shell `3f72c2f`),
+  converting the shm buffer to RGBA and writing the PNG with `ExportImage`;
+  the surface grab remains as a fallback. Works in-game and with the pause
+  overlay up.
+- COMMAND gesture: in-game a tap opens the overlay and a hold >= 700 ms takes
+  a screenshot; on shell screens a press takes one. Captures run in the input
+  section so they work while suspended. The Settings toggle now persists to
+  `/data/config/screenshot` and defaults to on.
+- The in-game COMMAND path (shell -> init -> compositor) waited up to ~1 s:
+  init's loop polled its sockets non-blocking then `nanosleep(1s)`. It now
+  waits on the fds with `poll()` (init `3c7309d`); the 1 Hz housekeeping and
+  the one-shot ticks (late audio, mark-good) are time-based so early wakeups
+  do not fast-forward them.
+- Known gap: in-game captures have no on-screen feedback (the shell surface
+  is hidden); only a log line. Also `playos-overlay-spec.md` still describes
+  aspirational UI not in the implementation.
 
 Still open on-device: SimpleDRM/low-graphics recovery (F3), the 19-criterion
 MVP smoke, and the perf baseline.

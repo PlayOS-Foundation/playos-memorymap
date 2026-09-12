@@ -23,14 +23,23 @@ Sprint 14 remaining work — all hardware-gated (see Sprint-14.md):
 4. **T10 installer-as-an-app front-end** polish; **T9** final signed v0.3.0 run
    + SDK-compile verification.
 
-Validation loop for the current recovery/overlay work: build
-`make ally-dev-usb-image`, flash, and check the recovery entry points plus
-COMMAND/SYSTEM pause-overlay behaviour. Fixes to verify on-device:
-`RollbackSlot` rollback and the non-blocking recovery watch (init `0094e83`,
-runtime `01c193b`, shell `1bc7403`), plus the overlay fixes — hidden overlay
-ignores the gamepad, d-pad is decoded from `ABS_HAT` on the Ally, and the pause
-menu is a focus list (Resume / Quit / Profile) where B resumes and Quit needs a
-held A (refdistro `8424797`, compositor `6fd8f63`, spec `f888d29`).
+Validation loop for the current recovery/overlay/screenshot work: build
+`make ally-dev-usb-image`, flash, and check the recovery entry points,
+COMMAND/SYSTEM pause-overlay behaviour, and screenshots. Fixes to verify
+on-device:
+
+- Recovery: `RollbackSlot` rollback and the non-blocking recovery watch.
+- Overlay: hidden overlay ignores the gamepad, d-pad is decoded from
+  `ABS_HAT` on the Ally, and the pause menu is a focus list (Resume / Quit /
+  Profile) where B resumes and Quit needs a held A.
+- Screenshots: hold COMMAND (>= 700 ms) in-game captures the composited
+  output to `/data/screenshots/`; tap opens the pause overlay; the Settings
+  toggle persists and defaults on.
+- Latency: the pause overlay should now appear immediately (init no longer
+  sleeps a full second between IPC polls).
+
+Current pins: init `3c7309d`, compositor `f20597b`, shell `3f72c2f`,
+spec `90ab490`, refdistro `bafdb59`.
 
 Sprint 15 (Game Developer SDK) has already been scaffolded in `playos-tools`
 (`f46f512`) and `playos-refdistro` (`scripts/export-sdk.sh`, `2e5fadc`); it
