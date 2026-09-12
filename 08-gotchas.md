@@ -1,6 +1,6 @@
 # 08 — Gotchas & Lessons Learned
 
-> Last updated: 2026-08-24. These are the things that have already bitten
+> Last updated: 2026-09-12. These are the things that have already bitten
 > someone on this project. Read before debugging.
 
 ## Boot / init
@@ -60,9 +60,12 @@
 
 ## IPC / distro
 
-- **Two copies of the IPC sources exist:** canonical = `playos-init/ipc/`,
-  synced copy = `playos-refdistro/src/playos-init/ipc/`. `playos-runtime`'s
-  CMake references the refdistro copy. Keep them identical.
+- **The component repos are symlinked, not copied.** `playos-refdistro/src/playos-*`
+  are symlinks to the sibling repos (`../../playos-init`, etc.), so
+  `src/playos-init/ipc/ipc.h` IS `playos-init/ipc/ipc.h` — there is only one
+  file. Edit and commit in the component repo; refdistro shows nothing for it
+  (`src/playos-*` is gitignored). Exceptions that are real in-repo dirs:
+  `src/playos-installer`, `src/playos-overlay`, `src/playos-raylib`.
 - **Local packages are only rsync'd on first Buildroot configure.** The
   Makefile `dirclean`s all `playos-*` packages before each build so `src/`
   edits are picked up. Don't bypass that.
@@ -82,6 +85,7 @@
 
 ## Hardware validation is its own gate
 
-QEMU/host passing ≠ done. Sprints 11.5, 11.6, and 12 are now on-device
-validated. The remaining hardware gate is Sprint 13 (Intel/NVIDIA laptop
-target). See [`09-next-steps.md`](09-next-steps.md).
+QEMU/host passing ≠ done. Sprints 11.5–13.7 are on-device validated on the ROG
+Ally and ZenBook. The remaining hardware gate is Sprint 14: the 19-criterion
+MVP smoke test, the performance baseline, and SimpleDRM/low-graphics recovery
+validation. See [`09-next-steps.md`](09-next-steps.md).

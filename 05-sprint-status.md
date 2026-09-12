@@ -1,21 +1,22 @@
 # 05 — Sprint Status
 
-> **Last updated: 2026-09-01** — Sprints 11.5, 11.6, 12, 13, 13.6, and 13.7 all closed (validated on-device). Sprint 14 in progress (production readiness).
+> **Last updated: 2026-09-12** — Sprints 11.5, 11.6, 12, 13, 13.6, and 13.7 all closed (validated on-device). Sprint 14 in progress (production readiness): recovery + pause-overlay iteration landed; awaiting the on-device 19-criterion smoke/perf pass.
 > Specs live in `playos-spec/src/sprints/`; this file summarizes state and evidence.
 
 ## Head SHAs (all repos clean on `main`)
 
 | Repo | HEAD |
 |---|---|
-| playos-spec | `99f8a93` spec: S14 task grid + docs (T6/T7/T8 done, T9/T10 in progress) |
-| playos-init | `49fd28e` init: recovery UI + button-hold + console-free installer handoff (S14 T6/T10) |
-| playos-compositor | `8efd749` compositor: wire playos_gpu_select_index into gpu_discovery (single source of truth) |
-| playos-runtime | `85acbb9` runtime: playos_trusted_start_installer wrapper (S13.7 T1) |
-| playos-refdistro | `4e70f34` versions.lock: bump spec/platform-api/init/shell to S14 commits |
+| playos-spec | `f5f1417` spec: RollbackSlot IPC + non-blocking recovery watch; grid refresh (S14) |
+| playos-init | `0094e83` init: RollbackSlot IPC + non-blocking late recovery watch (S14) |
+| playos-compositor | `0404ffd` compositor: reset overlay_visible on shell/terminating transitions (fix once-only overlay) |
+| playos-runtime | `01c193b` runtime: playos_trusted_rollback_slot wrapper (S14) |
+| playos-refdistro | `c341f8f` versions.lock: bump spec/init/runtime/shell for recovery rollback IPC (S14) |
 | playos-platform-api | `f3e629c` platform-api: Doxygen docs + examples + getting-started (S14 T3) |
-| playos-shell | `e3c0091` shell: recovery menu (S14 T6) |
+| playos-shell | `1bc7403` shell: recovery rollback via RollbackSlot IPC (S14) |
 | playos-samples | `2aaec17` fix cel shading white car |
 | playos-raylib | `dbc56a8` (6.0 tag, pinned in versions.lock) |
+| playos-tools | `f46f512` sdk: toolchain/pkg-config/profile scripts + docs (S15-T4 scaffolding) |
 | others | unchanged (docs/cloud) |
 
 ## Sprints 0–11: complete
@@ -118,14 +119,34 @@ by Kconfig `select` and is intentionally not gated).
 Sprint 14 in progress; S14-T10 adds "installer as a PlayOS app with console-free
 seamless handoff" (spec `b68509a`).
 
-**Sprint 14 implementation (2026-09-01).** T1/T2 API freeze already done;
-T3 docs (`f3e629c`), T4/T9 release pipeline + SDK tarball (`acb7fe8`),
-T5 MVP smoke checklist (`24dd9c8` + `c6fc07e`), T6 recovery core with
-Vol-Down-hold (`1729329`, `e3c0091`), T7 perf baseline (`63a4d67` +
-`59e3fd4`), T8 spec docs + ADRs (`182b138`), T10 console-free installer
-handoff + splash (`49fd28e`, `1a7ace4`). Pins bumped in refdistro
-`4e70f34`. Remaining: T9/T10 shell front-end polish, on-device smoke +
-perf runs, SimpleDRM recovery validation.
+**Sprint 14 implementation (2026-09-12).** T1/T2 API freeze done;
+T3 Doxygen docs + examples + getting-started (`f3e629c`) done;
+T4 tag-triggered release pipeline done (`dev-v0.3.0` published);
+T5 MVP smoke checklist + `scripts/mvp-smoke.sh` committed (`24dd9c8` +
+`c6fc07e`) — on-device 19-criterion run pending; T6 recovery core with
+Vol-Down-hold (`1729329`, `e3c0091`) done — SimpleDRM validation pending;
+T7 perf baseline checklist + collector (`63a4d67` + `59e3fd4`) — measurements
+pending; T8 spec docs + ADRs (`182b138`) done; T9 production defconfig +
+sign scripts + release lint done — final signed v0.3.0 run + SDK-compile
+verification pending; T10 console-free installer handoff + splash
+(`49fd28e`, `1a7ace4`) done — shell app-style installer entry pending.
+Also landed: SYSTEM/COMMAND → pause overlay via ShowOverlay/HideOverlay IPC
+(runtime `7d65fe3`, init `0c4fa77`, compositor `0404ffd`, shell `6e9211c`).
+Pins bumped in refdistro `bce8126`. Remaining: T9/T10 shell front-end
+polish, on-device smoke + perf runs, SimpleDRM recovery validation.
+
+**Recovery fixes (2026-09-12).** The recovery menu's Rollback no longer rewrites
+`/EFI/playos/boot.json` — that shell edit wrote one byte too many over the
+value's comma, corrupting the file so init could not parse it and the rollback
+silently no-op'ed on the next boot. The shell now sends a `RollbackSlot` IPC
+and init applies the real `boot_slot_rollback()` semantics (current slot `bad`,
+target `pending`, boot count reset) before rebooting. The late recovery button
+watch is now polled non-blocking from the supervision loop, so a normal boot is
+no longer delayed 4s and no longer prints a recovery prompt to the console.
+init `0094e83`, runtime `01c193b`, shell `1bc7403`, spec `f5f1417`, pins
+`c341f8f`. Still open: on-device verification of the fixes (F4 below — the
+overlay client processes gamepad input even while hidden, so B may quit the
+game during play; needs an on-device check).
 
 ## Where each sprint's detail lives
 
