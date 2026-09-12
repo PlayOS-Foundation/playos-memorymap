@@ -25,9 +25,11 @@ Sprint 14 remaining work — all hardware-gated (see Sprint-14.md):
 
 Validation loop for the current recovery/overlay work: build
 `make ally-dev-usb-image`, flash, and check the recovery entry points plus
-COMMAND/SYSTEM pause-overlay behaviour. Two fixes to verify on-device:
+COMMAND/SYSTEM pause-overlay behaviour. Fixes to verify on-device:
 `RollbackSlot` rollback and the non-blocking recovery watch (init `0094e83`,
-runtime `01c193b`, shell `1bc7403`).
+runtime `01c193b`, shell `1bc7403`), plus the overlay input fixes — hidden
+overlay ignores the gamepad, and d-pad (ABS_HAT) now drives volume / profile /
+power-menu cursor (refdistro `95747fc`, compositor `6fd8f63`).
 
 Sprint 15 (Game Developer SDK) has already been scaffolded in `playos-tools`
 (`f46f512`) and `playos-refdistro` (`scripts/export-sdk.sh`, `2e5fadc`); it
@@ -35,13 +37,16 @@ becomes the active sprint once Sprint 14's hardware gate closes.
 
 ## Open follow-ups
 
-1. **F4 — overlay input while hidden.** `src/playos-overlay/main.c` polls the
-   gamepad and runs its A/B/d-pad handlers unconditionally; only rendering is
-   gated on `st.visible`, and nothing `EVIOCGRAB`s the device. If confirmed,
-   pressing B during gameplay quits the game. Needs a 30-second on-device check
-   (launch a game, press B, observe).
+1. **SimpleDRM / low-graphics recovery (F3).** Recovery still renders through
+   the compositor, so the compositor-failure entry point cannot show the menu
+   when graphics are what broke. Needs a software/SimpleDRM render path
+   (S14-T6 acceptance gap).
 2. **11.5 installer `wipefs` follow-up (non-blocking):** doesn't reliably clear
    the inactive slot on reinstall; fresh installs still pivot correctly.
+
+Resolved on 2026-09-12: F1 (Rollback corrupted `boot.json`), F2 (4 s recovery
+watch on every boot), F4 (hidden overlay consumed gamepad input / Ally d-pad
+not decoded).
 
 ## Suggested reading
 

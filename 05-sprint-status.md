@@ -7,11 +7,11 @@
 
 | Repo | HEAD |
 |---|---|
-| playos-spec | `f5f1417` spec: RollbackSlot IPC + non-blocking recovery watch; grid refresh (S14) |
+| playos-spec | `b38c1e5` overlay spec: input ownership + button map + power-menu actions (S14) |
 | playos-init | `0094e83` init: RollbackSlot IPC + non-blocking late recovery watch (S14) |
-| playos-compositor | `0404ffd` compositor: reset overlay_visible on shell/terminating transitions (fix once-only overlay) |
+| playos-compositor | `6fd8f63` compositor: overlay about_to_hide on visibility reset (S14) |
 | playos-runtime | `01c193b` runtime: playos_trusted_rollback_slot wrapper (S14) |
-| playos-refdistro | `c341f8f` versions.lock: bump spec/init/runtime/shell for recovery rollback IPC (S14) |
+| playos-refdistro | `95747fc` overlay: gate input on visibility + decode ABS_HAT d-pad (S14) |
 | playos-platform-api | `f3e629c` platform-api: Doxygen docs + examples + getting-started (S14 T3) |
 | playos-shell | `1bc7403` shell: recovery rollback via RollbackSlot IPC (S14) |
 | playos-samples | `2aaec17` fix cel shading white car |
@@ -147,6 +147,18 @@ init `0094e83`, runtime `01c193b`, shell `1bc7403`, spec `f5f1417`, pins
 `c341f8f`. Still open: on-device verification of the fixes (F4 below — the
 overlay client processes gamepad input even while hidden, so B may quit the
 game during play; needs an on-device check).
+
+**Overlay input fixes (2026-09-12, from on-device testing).** F4 confirmed on
+hardware: the hidden overlay still acted on the gamepad, so B during play quit
+the game. Fixed by discarding decoded input while `!st.visible` and by making
+the compositor send `about_to_hide` whenever it clears overlay visibility
+(refdistro overlay `95747fc`, compositor `6fd8f63`). Also fixed the d-pad: the
+overlay decoded only `BTN_DPAD_*`, but the ROG Ally reports the d-pad as
+`ABS_HAT0X/ABS_HAT0Y` (xpad/hid-asus), so d-pad volume, profile change, and the
+power-menu cursor did nothing — both forms are now decoded. Overlay sub-menu
+mode resets on hide. Spec reconciled in `playos-overlay-spec.md` (`b38c1e5`).
+Still open on-device: SimpleDRM/low-graphics recovery (F3), the 19-criterion
+MVP smoke, and the perf baseline.
 
 ## Where each sprint's detail lives
 
