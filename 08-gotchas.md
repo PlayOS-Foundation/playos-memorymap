@@ -15,6 +15,14 @@
   struct**, and **bind the protocol version you actually implement** (we now
   bind screencopy at v1, where wl_shm is guaranteed and the client copies
   directly from the `buffer` event; v3 requires waiting for `buffer_done`).
+- **Honour the `wl_shm` format — it is not always `XRGB8888`.** The screencopy
+  `buffer` event names the format the compositor will fill, and the byte order
+  follows it: little-endian `XRGB8888`/`ARGB8888` memory is `B,G,R,X`, but
+  `XBGR8888`/`ABGR8888` memory is `R,G,B,X`. Assuming `B,G,R,X` unconditionally
+  swapped red and blue on hardware (the UI's navy `(20,41,76)` background was
+  written as `(76,40,20)`, orange highlights came out blue). Verify colour
+  paths by sampling a PNG pixel and comparing with the colour the UI source
+  draws, not by eye.
 - **Roles must be released on disconnect.** The compositor kept `shell_client`
   set after the client died, so the supervisor's restart was rejected with
   `shell role already taken` and ran untrusted for the whole session. Fixed with
