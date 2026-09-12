@@ -203,6 +203,17 @@ and the screenshot on the shell UI. Added an explicit
 `screenshot requested (…)` log line and a 0.4 s debounce. See
 [`08-gotchas.md`](08-gotchas.md) for the input lessons.
 
+**Samples no longer quit on B (samples `651ed31`).** "B returns me to the shell
+in game" looked like a platform bug but was the samples' own code: all 11 games
+exited on B (`IsGamepadButtonPressed(… RIGHT_FACE_RIGHT)` → `break`, 8 of them
+printing `B = QUIT` on screen) — a leftover from before the pause overlay
+existed. Removing it matters because a reference distribution's samples teach
+UX: quitting is now the overlay's Quit Game (→ `PLAYOS_LIFECYCLE_TERMINATE`)
+only. The PlayOS side was already correct — the hidden overlay discards its
+input, and B is not a reserved key, so a third-party game may still use B
+however it likes. Note the samples never relied on `WindowShouldClose()` (the
+PlayOS backend does not feed it), so the lifecycle is genuinely their only exit.
+
 Still open on-device: SimpleDRM/low-graphics recovery (F3), the 19-criterion
 MVP smoke, and the perf baseline.
 
