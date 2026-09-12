@@ -27,9 +27,10 @@ Validation loop for the current recovery/overlay work: build
 `make ally-dev-usb-image`, flash, and check the recovery entry points plus
 COMMAND/SYSTEM pause-overlay behaviour. Fixes to verify on-device:
 `RollbackSlot` rollback and the non-blocking recovery watch (init `0094e83`,
-runtime `01c193b`, shell `1bc7403`), plus the overlay input fixes — hidden
-overlay ignores the gamepad, and d-pad (ABS_HAT) now drives volume / profile /
-power-menu cursor (refdistro `95747fc`, compositor `6fd8f63`).
+runtime `01c193b`, shell `1bc7403`), plus the overlay fixes — hidden overlay
+ignores the gamepad, d-pad is decoded from `ABS_HAT` on the Ally, and the pause
+menu is a focus list (Resume / Quit / Profile) where B resumes and Quit needs a
+held A (refdistro `8424797`, compositor `6fd8f63`, spec `f888d29`).
 
 Sprint 15 (Game Developer SDK) has already been scaffolded in `playos-tools`
 (`f46f512`) and `playos-refdistro` (`scripts/export-sdk.sh`, `2e5fadc`); it

@@ -7,11 +7,11 @@
 
 | Repo | HEAD |
 |---|---|
-| playos-spec | `b38c1e5` overlay spec: input ownership + button map + power-menu actions (S14) |
+| playos-spec | `f888d29` overlay spec: quick-menu focus list; B resumes, Quit is a held-A item (S14) |
 | playos-init | `0094e83` init: RollbackSlot IPC + non-blocking late recovery watch (S14) |
 | playos-compositor | `6fd8f63` compositor: overlay about_to_hide on visibility reset (S14) |
 | playos-runtime | `01c193b` runtime: playos_trusted_rollback_slot wrapper (S14) |
-| playos-refdistro | `95747fc` overlay: gate input on visibility + decode ABS_HAT d-pad (S14) |
+| playos-refdistro | `8424797` overlay: pause menu focus list; B resumes, Quit is hold-A (S14) |
 | playos-platform-api | `f3e629c` platform-api: Doxygen docs + examples + getting-started (S14 T3) |
 | playos-shell | `1bc7403` shell: recovery rollback via RollbackSlot IPC (S14) |
 | playos-samples | `2aaec17` fix cel shading white car |
@@ -157,6 +157,16 @@ overlay decoded only `BTN_DPAD_*`, but the ROG Ally reports the d-pad as
 `ABS_HAT0X/ABS_HAT0Y` (xpad/hid-asus), so d-pad volume, profile change, and the
 power-menu cursor did nothing — both forms are now decoded. Overlay sub-menu
 mode resets on hide. Spec reconciled in `playos-overlay-spec.md` (`b38c1e5`).
+
+**Pause menu redesign (2026-09-12, requested on-device).** Owner wants B to mean
+resume and Quit to be a menu entry. The quick menu is now a focus list — Resume
+Game / Quit Game / Performance Profile: D-pad Up/Down moves focus, A activates,
+B resumes (never quits), D-pad Left/Right steps volume, SELECT opens the power
+menu. Quit Game is item-only and requires holding A ~0.9 s (progress readout);
+`poll_input` now tracks A's held state for that. Profile opens from the menu
+item instead of the old d-pad L/R modifier; volume moved from Up/Down to
+Left/Right. refdistro `8424797`, spec `f888d29`.
+
 Still open on-device: SimpleDRM/low-graphics recovery (F3), the 19-criterion
 MVP smoke, and the perf baseline.
 
