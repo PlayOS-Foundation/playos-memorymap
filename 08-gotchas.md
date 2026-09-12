@@ -41,6 +41,20 @@
   the volume keys. When a game dies, read *how*: `signal=15` means something
   else terminated it (`TerminateGame from fd=N` in `init.log` — fd 10 is the
   shell's control connection), `code=0` means the game exited on its own.
+- **The live USB and an installed disk share every partition name.** Both use
+  `ESP`, `playos-a`, `playos-b`, `playos-data` as GPT names, so *anything* that
+  resolves a partition by name is ambiguous once an install exists — and the
+  first match in `/proc/partitions` is the NVMe. On the Ally a USB boot picked
+  the NVMe's ESP (no `EFI/playos/live-usb` marker there) and pivoted into the
+  *installed* slot, so "boot from USB" silently booted the installed system and
+  the installer option never appeared. The unambiguous signal is the firmware's
+  own record: `BootCurrent` → `Boot####` → device path (USB node = type 3
+  subtype 5/0x10), which is what `init` now consults
+  (`src/boot_media.c`, host-tested). Corollary: a live boot must not touch the
+  installed slot's `boot.json` counters, or repeated live boots can trip its
+  3-strike rollback. Related trap: the install-payload check used to
+  `mkdir("/mnt/...")`, which fails with EROFS when the root is the installed
+  squashfs — mount check points under `/run`.
 
 ## Input / reserved buttons
 
