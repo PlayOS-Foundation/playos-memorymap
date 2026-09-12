@@ -56,6 +56,21 @@
   `mkdir("/mnt/...")`, which fails with EROFS when the root is the installed
   squashfs — mount check points under `/run`.
 
+## Shell rendering
+
+- **Every screen must clear the frame first** (`render_begin_frame()`), because
+  the renderer keeps the previous frame's pixels. A screen that forgets is drawn
+  *on top of* the previous screen — the installer screen appeared over Settings
+  with both fully legible on hardware. The installer and recovery screens were
+  the two offenders.
+- Screen layout conventions live in `playos-spec/src/playos-shell-spec.md`
+  ("Layout Conventions"): content column `0.15 * width`, row rhythm
+  `8 * label_scale`, right-aligned affordance on selectable rows, hint line at
+  `height - scale * 45` (above the status bar), and the three-zone status bar
+  (battery / temperatures / profile + thermal). Reach for those instead of
+  inventing per-screen spacing; the settings screen had drifted (16*scale info
+  rows, a tab strip inset from the column, a half-empty selection bar).
+
 ## Input / reserved buttons
 
 - **The Ally's reserved buttons are momentary pulses — no hold gestures.** A raw
