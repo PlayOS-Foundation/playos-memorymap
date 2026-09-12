@@ -3,6 +3,28 @@
 > Last updated: 2026-09-12. These are the things that have already bitten
 > someone on this project. Read before debugging.
 
+## Wayland
+
+- **A NULL listener slot aborts the process.** libwayland-client prints
+  `listener function for opcode N of <interface> is NULL` and then calls
+  `abort()`. It is not a warning. This killed the shell on hardware: we bound
+  `zwlr_screencopy_manager_v1` at **version 3** but only filled the version-1
+  events in the generated frame listener, so the compositor's `linux_dmabuf`
+  offer (opcode 5) hit a NULL slot → SIGABRT → shell dead → empty compositor
+  scene ("blue screen"). Two rules: **fill every member of a generated listener
+  struct**, and **bind the protocol version you actually implement** (we now
+  bind screencopy at v1, where wl_shm is guaranteed and the client copies
+  directly from the `buffer` event; v3 requires waiting for `buffer_done`).
+- **Roles must be released on disconnect.** The compositor kept `shell_client`
+  set after the client died, so the supervisor's restart was rejected with
+  `shell role already taken` and ran untrusted for the whole session. Fixed with
+  `wl_client_add_destroy_listener` (`3862e4d`). Any time a trusted role is
+  claimed, add a destroy handler for it.
+- **Append-only logs hide boot boundaries.** `/data/log/shell-stderr.log`
+  survives restarts, so a crash is found via `grep -n "entering main loop"` to
+  locate boots and `init.log`'s `shell PID N exited: code=-1 signal=6`
+  (signal 6 = SIGABRT) to confirm a crash.
+
 ## Input / reserved buttons
 
 - **The Ally's reserved buttons are momentary pulses — no hold gestures.** A raw
