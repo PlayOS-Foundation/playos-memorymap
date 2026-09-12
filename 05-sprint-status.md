@@ -203,7 +203,7 @@ and the screenshot on the shell UI. Added an explicit
 `screenshot requested (…)` log line and a 0.4 s debounce. See
 [`08-gotchas.md`](08-gotchas.md) for the input lessons.
 
-**Samples no longer quit on B (samples `651ed31`).** "B returns me to the shell
+**B during gameplay: two separate causes.** "B returns me to the shell
 in game" looked like a platform bug but was the samples' own code: all 11 games
 exited on B (`IsGamepadButtonPressed(… RIGHT_FACE_RIGHT)` → `break`, 8 of them
 printing `B = QUIT` on screen) — a leftover from before the pause overlay

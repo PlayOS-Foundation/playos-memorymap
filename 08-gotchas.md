@@ -32,6 +32,15 @@
   survives restarts, so a crash is found via `grep -n "entering main loop"` to
   locate boots and `init.log`'s `shell PID N exited: code=-1 signal=6`
   (signal 6 = SIGABRT) to confirm a crash.
+- **"Suspended" stops drawing, not logic.** The shell's screen `_update()`
+  handlers used to run while a game was foreground, so they reacted to buttons
+  the game was using — the game-detail screen's B ("back") calls
+  `playos_trusted_terminate_game()`, and pressing B during gameplay killed the
+  game (`shell 639b73d`). Gate every input-consuming loop on `!is_suspended`;
+  the only things that may act mid-game are the reserved-button gestures and
+  the volume keys. When a game dies, read *how*: `signal=15` means something
+  else terminated it (`TerminateGame from fd=N` in `init.log` — fd 10 is the
+  shell's control connection), `code=0` means the game exited on its own.
 
 ## Input / reserved buttons
 
