@@ -214,8 +214,17 @@ input, and B is not a reserved key, so a third-party game may still use B
 however it likes. Note the samples never relied on `WindowShouldClose()` (the
 PlayOS backend does not feed it), so the lifecycle is genuinely their only exit.
 
-Still open on-device: SimpleDRM/low-graphics recovery (F3), the 19-criterion
-MVP smoke, and the perf baseline.
+**S14 progress (2026-09-12).** T5/T7/T9/T10 all moved: the MVP smoke ran on hardware
+(**18/19**, criterion 19 blocked by F3 — reports in `playos-refdistro/docs/`), the perf
+baseline was measured (shell→game 1.00 s, SYSTEM→overlay 4–5 ms, exit→shell 28 ms pass;
+boot→shell 7.16 s vs 5 s target; in-game FPS and direct scanout unverified) with gaps
+P1–P7 filed in `playos-spec/src/testing.md`, the SDK headers were verified to compile,
+link and run a minimal game on the host, and the installer became an app: the shell now
+owns the disk picker + hold-A confirm (`SCREEN_INSTALLER`) and passes the chosen disk
+through `StartInstaller` → `PLAYOS_INSTALL_TARGET`.
+
+Still open on-device: SimpleDRM/low-graphics recovery (F3), the last T9 signing step,
+and the perf gaps.
 
 ## Where each sprint's detail lives
 
