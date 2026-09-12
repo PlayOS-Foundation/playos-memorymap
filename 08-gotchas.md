@@ -56,6 +56,26 @@
   `mkdir("/mnt/...")`, which fails with EROFS when the root is the installed
   squashfs — mount check points under `/run`.
 
+## Debugging a crash
+
+- **A crash can be invisible because the child's stderr is block-buffered.**
+  `child_log_redirect()` points stderr at a file, so stdio buffers it and a
+  SIGSEGV takes the last lines with it — the compositor's log looked like it
+  "stopped after the DRM modeset". Now line-buffered in init; keep it that way.
+- **Fault-logger technique (no reflash needed):** the compositor defaults to a
+  headless backend, so you can reproduce and instrument on the running device:
+  cross-compile a tiny `LD_PRELOAD` .so that caches the main-object load base at
+  constructor time, installs a `SA_SIGINFO` handler and writes
+  `sig/fault/rip/rsp/rbp/caller` with raw `write(2)` (no `dladdr` *inside* the
+  handler — loader calls there can fault or deadlock, which silently loses the
+  report). Run `PLAYOS_BACKEND=headless XDG_RUNTIME_DIR=/tmp/diag
+  LD_PRELOAD=... playos-compositor`, drive it with the real shell/overlay, then
+  map `caller - lib_base + file_off` from `/proc/<pid>/maps` through
+  `addr2line -f -e <lib>` on the build host.
+- **`rip=0x0, fault=0x0` means a call through a NULL function pointer** — in
+  Wayland code that is almost always a `wl_listener` whose `notify` was never
+  set, or an init function that was never called. Check both.
+
 ## Installer handoff
 
 - **Do not tear the session down to install.** The S13.7 handoff stopped the
