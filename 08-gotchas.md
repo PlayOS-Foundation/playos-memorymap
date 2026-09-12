@@ -78,6 +78,24 @@
 
 ## Installer handoff
 
+- **Ack a synchronous IPC request before you start tearing the caller down.**
+  `playos_trusted_start_installer_target()` is a `send_and_recv()`, so the shell
+  blocks in `recv()` for `StartInstallerAck`. init used to send that ack *after*
+  the handoff, and the handoff waits for the shell to exit — the pair stalled for
+  the whole 2 s timeout, and by the time the old shell's Wayland client finally
+  disconnected the installer had registered, been rejected with
+  `shell role already taken` and aborted (`eglInitialize failed`). The ack now
+  means "accepted, handing over now" and goes out first. Same rule for any future
+  trusted call whose handler stops the caller.
+- **The compositor only frees a trusted role when the client's socket closes**, so
+  a handoff that replaces a client must ensure the old process is *gone* before
+  spawning its replacement: SIGTERM then SIGKILL after 800 ms
+  (`stop_client_hard()`), plus a short settle. The overlay is the first client
+  the handoff kills and the shell handles SIGTERM (so it can outlive the wait),
+  which is how this bit. The compositor now logs the holder pid on a rejected
+  claim and every role release — read those lines first when a handoff misbehaves.
+
+
 - **Do not tear the session down to install.** The S13.7 handoff stopped the
   compositor only so `/data` could be unmounted; that cost a DRM modeset blink
   (a black flash) and silently discarded the installer's log. Now only the UI
