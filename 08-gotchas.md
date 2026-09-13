@@ -97,6 +97,22 @@
   ships no `/usr/lib/dri` software rasteriser, so `LIBGL_ALWAYS_SOFTWARE=1`
   cannot rescue it either.
 
+## Rendering and recovery
+
+- **A GL client cannot run on a software-rendered compositor, so recovery needs a
+  GL-free UI.** Forcing `WLR_RENDERER=pixman` starts the compositor but Raylib's
+  EGL then fails on the Ally (`failed to get driver name for fd -1` →
+  `eglInitialize 0x3001`); the shell exits, crash-loops and init leaves an empty
+  compositor (a blue screen). `playos-recovery` (new `playos-recovery` package)
+  is the answer: a `wl_shm` client that rasterises its own text, reads evdev
+  directly, and performs the menu actions over the trusted IPC. init starts it
+  when the shell hits its restart limit *in recovery*; the GL shell stays the
+  preferred UI whenever it works.
+- **Hooks for testing the broken-graphics path without a broken GPU:**
+  `playos.renderer=pixman` (compositor software rendering) and `playos.noshell=1`
+  (the shell fails on purpose). Both are kernel-cmdline options honoured by init;
+  used by `scripts/qemu-recovery-check.sh` (F3_APPEND).
+
 ## Debugging a crash
 
 - **A crash can be invisible because the child's stderr is block-buffered.**

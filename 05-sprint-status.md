@@ -223,7 +223,16 @@ link and run a minimal game on the host, and the installer became an app: the sh
 owns the disk picker + hold-A confirm (`SCREEN_INSTALLER`) and passes the chosen disk
 through `StartInstaller` → `PLAYOS_INSTALL_TARGET`.
 
-**F3 closed (2026-09-13) — MVP criterion 19 now passes.** Recovery no longer depends on
+**F3 closed properly (2026-09-13): the recovery UI no longer needs GL.** Compositor-side software
+rendering was not enough — the shell is a GL client and cannot initialise EGL against a pixman
+compositor on the Ally, which produced an empty (blue) screen. The new `playos-recovery` package
+is a `wl_shm` client that paints its own text (stb_truetype) and reads evdev directly; init starts
+it when the shell cannot run in recovery, and the GL shell remains the preferred UI when it works.
+Verified in QEMU with the `playos.noshell` hook reproducing the shell-failure case
+(`docs/evidence/f3-recovery-client-no-gl-2026-09-13.png`). Not covered: a machine with no DRM
+device at all (no compositor → would need a kernel-console UI).
+
+**Earlier F3 work — compositor software path (2026-09-13).** Recovery no longer depends on
 the accelerated GPU: the kernel provides SimplEDRM (`FB`/`SYSFB`/`SYSFB_SIMPLEFB`/`DRM_SIMPLEDRM`),
 the compositor has a software (pixman) path that probes for a usable DRM device before creating
 the backend once, and init forces `PLAYOS_RENDERER=pixman` for recovery plus restarts a dead
