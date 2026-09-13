@@ -250,8 +250,9 @@ no-op (read before `/proc` was mounted). Verified with the new
 only) renders the recovery menu on screen — evidence
 `playos-refdistro/docs/evidence/f3-recovery-menu-no-gpu-2026-09-13.png`, report
 `docs/f3-recovery-software-rendering-2026-09-13.md`.
-Remaining in Sprint 14: perf gaps P2 (in-game FPS), P3 (scanout logging), P4 (damage-driven
-shell rendering), and on-device confirmation of the SimplEDRM change.
+**Perf gaps P2 + P4 done and measured on the Ally (2026-09-13).** P2: the compositor logs each toplevel's commit rate per second (`fps shell=N game=M`) — measured compositor-side so it covers non-cooperative games; a sample game peaked at **120 commits/s**. P4: the shell is damage-driven — idle **55.5 → 8.0 fps** and shell CPU **7.4% → 2.6-2.8% of one core**; only discrete input counts as activity (the right stick rests with a ±128 `ABS_RY` oscillation, ~65 events/s, which pinned the old rule), analog-motion screens such as the Live Input Test ask for full rate explicitly, and the idle loop sleeps 4 ms because raylib's pacing lives inside `EndDrawing()`. Evidence in `playos-refdistro/docs/perf-baseline-report-2026-09-12.md` (follow-up section) and `08-gotchas.md`.
+
+Remaining in Sprint 14: P1 (boot 7.16 s vs 5 s target) and P3 (direct-scanout observability).
 
 **S14-T9 verified on hardware (2026-09-13).** Final signed-artifact run: production image
 hygiene confirmed (no `/bin/sh`, busybox, dropbear/sshd), EFI kernel signed (`sbverify` OK),
