@@ -133,6 +133,20 @@
   Wayland code that is almost always a `wl_listener` whose `notify` was never
   set, or an init function that was never called. Check both.
 
+## Power and idle behaviour
+
+- **Analog axes are never quiet.** The Ally's right stick rests with a +/-128
+  oscillation on `ABS_RY` (measured: 511 <-> 767, ~65 events/s with nobody
+  touching it). Any idle/activity heuristic built on *raw evdev traffic* will
+  therefore think the user is constantly active. Count **discrete** input
+  (EV_KEY, d-pad hat) as activity; if analog must count, use a delta threshold
+  well above the drift (the observed step is 256 counts).
+- **Skipping a frame also skips raylib's frame pacing.** raylib waits for the
+  target FPS inside `EndDrawing()`, so an idle loop that skips drawing spins and
+  burns a core unless it sleeps itself (the shell sleeps 4 ms, which keeps input
+  latency in single-digit ms). Related: a screen whose *purpose* is watching
+  analog values (the Live Input Test) must ask for full frame rate explicitly.
+
 ## Build system
 
 - **Buildroot does not reliably rebuild a `local`-site package when its source
