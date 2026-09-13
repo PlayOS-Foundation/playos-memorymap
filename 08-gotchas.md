@@ -133,6 +133,17 @@
   Wayland code that is almost always a `wl_listener` whose `notify` was never
   set, or an init function that was never called. Check both.
 
+## Build system
+
+- **Buildroot does not reliably rebuild a `local`-site package when its source
+  changes.** Editing `src/playos-recovery/main.c` and running `make ally-dev-usb-image`
+  produced an image with the *previous* binary: the bundle shipped and the device
+  showed the old behaviour until `playos-recovery-rebuild` was run explicitly.
+  After touching a local package's source, always run
+  `<pkg>-rebuild` for **each** O= output you care about, then verify the binary
+  inside the produced image (`mount -o loop,ro images/rootfs.squashfs` + hash
+  against `target/`) *before* bundling or flashing.
+
 ## Partition and filesystem work
 
 - **Never parse a partition out of a device name — ask sysfs.**
