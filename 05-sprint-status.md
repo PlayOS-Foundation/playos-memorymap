@@ -232,6 +232,14 @@ Verified in QEMU with the `playos.noshell` hook reproducing the shell-failure ca
 (`docs/evidence/f3-recovery-client-no-gl-2026-09-13.png`). Not covered: a machine with no DRM
 device at all (no compositor → would need a kernel-console UI).
 
+**Verified on the Ally the same day** through the *automatic* path: recovery shell killed until
+init's restart limit tripped → `recovery client launched (PID 505)` → the client
+`registered as the shell role` (compositor: `trusted: shell client registered`) → menu rendered with
+d-pad, log list/viewer working, and its own screenshot saved to
+`/data/screenshots/recovery-<epoch>.png`. Evidence pair:
+`f3-recovery-shell-menu-on-ally-2026-09-13.png` (shell's menu, status bar present) vs
+`f3-recovery-client-on-ally-2026-09-13.png` (client's menu, no status bar).
+
 **Earlier F3 work — compositor software path (2026-09-13).** Recovery no longer depends on
 the accelerated GPU: the kernel provides SimplEDRM (`FB`/`SYSFB`/`SYSFB_SIMPLEFB`/`DRM_SIMPLEDRM`),
 the compositor has a software (pixman) path that probes for a usable DRM device before creating
