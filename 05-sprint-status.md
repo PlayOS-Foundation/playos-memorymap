@@ -223,6 +223,15 @@ link and run a minimal game on the host, and the installer became an app: the sh
 owns the disk picker + hold-A confirm (`SCREEN_INSTALLER`) and passes the chosen disk
 through `StartInstaller` → `PLAYOS_INSTALL_TARGET`.
 
+**S14-T9 verified on hardware (2026-09-13).** Final signed-artifact run: production image
+hygiene confirmed (no `/bin/sh`, busybox, dropbear/sshd), EFI kernel signed (`sbverify` OK),
+prod `update.playosb` built with HMAC + payload hash independently verified, SDK headers
+compile a minimal game with `-Werror` and run. Then the **A/B update was applied to the
+installed Ally**: slot B written byte-exactly (`sha256(slot B)` == shipped
+`rootfs.squashfs`), `boot.json` flipped to `b`/0.3.0/healthy, and the system booted slot B.
+Evidence: `playos-refdistro/docs/t9-signed-artifacts-2026-09-13.md` + `playos-0.3.0-SHA256SUMS.txt`.
+Still open for T9: the rollback half (recovery menu → Rollback → slot A) and the CI release run.
+
 **S14-T10 verified on hardware (2026-09-13).** The installer now works end to end from the
 shell: Settings → System → Install PlayOS to internal disk → disk → hold A → the handoff is
 seamless (no blink, no console, compositor and `/data` stay up) → all 8 steps complete →
