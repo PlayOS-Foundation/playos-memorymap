@@ -76,6 +76,26 @@
   Wayland code that is almost always a `wl_listener` whose `notify` was never
   set, or an init function that was never called. Check both.
 
+## Partition and filesystem work
+
+- **Never parse a partition out of a device name — ask sysfs.**
+  `nvme0n1` *is* a disk that ends in a digit, so "strip the trailing number"
+  turns it into `nvme0` while `nvme0n1p1` becomes `nvme0n1`: the two never match.
+  That silently stopped the installer handoff from releasing `/EFI` (it decided
+  the ESP was "not on the install target"). Use
+  `/sys/class/block/<dev>/partition` (exists only for partitions) plus the
+  resolved parent directory — verified on the Ally: `nvme0n1p1 -> nvme0n1`,
+  `sda1 -> sda`, `nvme0n1 -> nvme0n1`.
+- **mkfs refuses a mounted device** with exit 1 and
+  `<dev> contains a mounted filesystem`; the kernel also cannot re-read a
+  partition table that is in use. So release every mount on the target before
+  repartitioning — and do not rely on someone else having done it:
+  the installer calls `playos_format_release_target()` before step 0.
+- **Keep the tools' stderr.** `run_cmd()` used to send it to `/dev/null`, so a
+  failure reduced to "mkfs.fat failed (exit 1)" and cost hours of guessing. It
+  now captures (and drains) the child's output into the error string, which the
+  installer logs and shows on screen.
+
 ## Installer handoff
 
 - **Ack a synchronous IPC request before you start tearing the caller down.**
