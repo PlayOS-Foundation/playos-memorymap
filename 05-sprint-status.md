@@ -124,7 +124,7 @@ T3 Doxygen docs + examples + getting-started (`f3e629c`) done;
 T4 tag-triggered release pipeline done (`dev-v0.3.0` published);
 T5 MVP smoke checklist + `scripts/mvp-smoke.sh` committed (`24dd9c8` +
 `c6fc07e`) — on-device 19-criterion run pending; T6 recovery core with
-Vol-Down-hold (`1729329`, `e3c0091`) done — SimpleDRM validation pending;
+button-hold entry (`1729329`, `e3c0091`) done — later closed by F3;
 T7 perf baseline checklist + collector (`63a4d67` + `59e3fd4`) — measurements
 pending; T8 spec docs + ADRs (`182b138`) done; T9 production defconfig +
 sign scripts + release lint done — final signed v0.3.0 run + SDK-compile

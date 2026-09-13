@@ -60,7 +60,7 @@
 
 - **A boot decision that reads `/proc/cmdline` must run after
   `playos_mount_virtual()`.** `playos.recovery` was checked before `/proc`
-  existed, so it silently returned 0 on *every* boot; the Volume-Down entry uses
+  existed, so it silently returned 0 on *every* boot; the button-hold entry uses
   evdev and therefore worked, which hid it. If a boot flag "does nothing", check
   when it is read. (init now logs the whole cmdline at boot.)
 - **A headless backend still needs a renderer and an allocator.**
