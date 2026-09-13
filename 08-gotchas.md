@@ -85,6 +85,18 @@
   (`scripts/qemu-recovery-check.sh`). Guest logs come off `output/qemu/images/data.img`
   with `mount -o ro,noload` (the killed QEMU leaves the ext4 dirty).
 
+## Rendering and recovery
+
+- **A GL client cannot run on a software-rendered compositor.** Forcing
+  `WLR_RENDERER=pixman` for recovery starts the compositor but Raylib's EGL then
+  fails (`failed to get driver name for fd -1` → `eglInitialize 0x3001`): with
+  the pixman renderer there is no dmabuf/GL, so the shell exits, crash-loops five
+  times and init leaves an empty compositor on screen (a blue screen). Recovery
+  must keep the accelerated renderer; a recovery UI that needs no GL at all
+  (a `wl_shm` client) is the right answer for the no-GPU case. This image also
+  ships no `/usr/lib/dri` software rasteriser, so `LIBGL_ALWAYS_SOFTWARE=1`
+  cannot rescue it either.
+
 ## Debugging a crash
 
 - **A crash can be invisible because the child's stderr is block-buffered.**
