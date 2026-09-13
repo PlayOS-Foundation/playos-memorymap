@@ -223,6 +223,19 @@ link and run a minimal game on the host, and the installer became an app: the sh
 owns the disk picker + hold-A confirm (`SCREEN_INSTALLER`) and passes the chosen disk
 through `StartInstaller` → `PLAYOS_INSTALL_TARGET`.
 
+**F3 closed (2026-09-13) — MVP criterion 19 now passes.** Recovery no longer depends on
+the accelerated GPU: the kernel provides SimplEDRM (`FB`/`SYSFB`/`SYSFB_SIMPLEFB`/`DRM_SIMPLEDRM`),
+the compositor has a software (pixman) path that probes for a usable DRM device before creating
+the backend once, and init forces `PLAYOS_RENDERER=pixman` for recovery plus restarts a dead
+compositor in software mode. Along the way `playos.recovery` on the cmdline was found to be a
+no-op (read before `/proc` was mounted). Verified with the new
+`scripts/qemu-recovery-check.sh`: guest with **no GPU driver** (QEMU cirrus VGA → SimplEDRM
+only) renders the recovery menu on screen — evidence
+`playos-refdistro/docs/evidence/f3-recovery-menu-no-gpu-2026-09-13.png`, report
+`docs/f3-recovery-software-rendering-2026-09-13.md`.
+Remaining in Sprint 14: perf gaps P2 (in-game FPS), P3 (scanout logging), P4 (damage-driven
+shell rendering), and on-device confirmation of the SimplEDRM change.
+
 **S14-T9 verified on hardware (2026-09-13).** Final signed-artifact run: production image
 hygiene confirmed (no `/bin/sh`, busybox, dropbear/sshd), EFI kernel signed (`sbverify` OK),
 prod `update.playosb` built with HMAC + payload hash independently verified, SDK headers

@@ -56,6 +56,35 @@
   `mkdir("/mnt/...")`, which fails with EROFS when the root is the installed
   squashfs — mount check points under `/run`.
 
+## Rendering and recovery
+
+- **A boot decision that reads `/proc/cmdline` must run after
+  `playos_mount_virtual()`.** `playos.recovery` was checked before `/proc`
+  existed, so it silently returned 0 on *every* boot; the Volume-Down entry uses
+  evdev and therefore worked, which hid it. If a boot flag "does nothing", check
+  when it is read. (init now logs the whole cmdline at boot.)
+- **A headless backend still needs a renderer and an allocator.**
+  `wlr_output_init_render()` asserts `allocator != NULL && renderer != NULL` and
+  aborts the process (SIGABRT, "Assertion failed ... types/output/render.c"), so
+  a "fallback" that creates only the backend crash-loops the compositor.
+- **Create the wlroots backend exactly once.** `wlr_renderer_init_wl_display()`
+  publishes `wl_shm`/linux-dmabuf globals; retrying a *failed* backend start with
+  a fresh renderer duplicates them and ends in an abort. Probe the device first
+  (`playos_output_select_from_fd()` on each `/dev/dri/card*`), then create once.
+- **`CONFIG_DRM_SIMPLEDRM` alone creates no card** — `CONFIG_SYSFB_SIMPLEFB`
+  (plus `CONFIG_FB`) registers the firmware-framebuffer platform device it binds
+  to. Both are now on for ally and qemu; SimplEDRM is the display of last resort
+  when the GPU driver never probes.
+- **wlroots' pixman renderer is available** (compiled into `libwlroots-0.20`):
+  `WLR_RENDERER=pixman` plus the DRM backend drives it through dumb buffers, so
+  software rendering still reaches a real display. Recovery uses it via
+  `PLAYOS_RENDERER=pixman`.
+- **Testing "no GPU driver" without a device:** boot QEMU with `-vga cirrus`
+  (this kernel has no cirrus DRM driver) so the guest's only DRM device is
+  SimplEDRM, then read the emulated screen with the QEMU monitor's `screendump`
+  (`scripts/qemu-recovery-check.sh`). Guest logs come off `output/qemu/images/data.img`
+  with `mount -o ro,noload` (the killed QEMU leaves the ext4 dirty).
+
 ## Debugging a crash
 
 - **A crash can be invisible because the child's stderr is block-buffered.**
