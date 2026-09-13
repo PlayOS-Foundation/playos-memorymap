@@ -252,7 +252,16 @@ only) renders the recovery menu on screen — evidence
 `docs/f3-recovery-software-rendering-2026-09-13.md`.
 **Perf gaps P2 + P4 done and measured on the Ally (2026-09-13).** P2: the compositor logs each toplevel's commit rate per second (`fps shell=N game=M`) — measured compositor-side so it covers non-cooperative games; a sample game peaked at **120 commits/s**. P4: the shell is damage-driven — idle **55.5 → 8.0 fps** and shell CPU **7.4% → 2.6-2.8% of one core**; only discrete input counts as activity (the right stick rests with a ±128 `ABS_RY` oscillation, ~65 events/s, which pinned the old rule), analog-motion screens such as the Live Input Test ask for full rate explicitly, and the idle loop sleeps 4 ms because raylib's pacing lives inside `EndDrawing()`. Evidence in `playos-refdistro/docs/perf-baseline-report-2026-09-12.md` (follow-up section) and `08-gotchas.md`.
 
-Remaining in Sprint 14: P1 (boot 7.16 s vs 5 s target) and P3 (direct-scanout observability).
+**P1 first cuts landed and measured (2026-09-13).** Boot attribution
+(`scripts/boot-timeline.sh`) showed 4.51 s before init, 0.79 s to mount the ESP, a fixed 500 ms "grace
+period" before spawning the shell, 0.93 s of shell EGL/window init and 0.44 s to the first frame. The
+grace period is now a Wayland-socket connect-probe (logged: "ready after 0 ms") and the ESP retry polls
+at 25 ms instead of backing off: **cold boot → shell ready 7.66 s → 6.49 s (−1.17 s)**, `system ready`
+at 5.58 s. The ESP stage itself did not shrink — that wait is the kernel bringing up the NVMe, and it is
+critical-path only because boot counting/pivot need `/EFI` (fix: pass the slot from GRUB).
+
+Remaining in Sprint 14: the rest of P1 (initramfs/kernel ~2.5-3 s before init, shell startup ~0.9-1.4 s,
+slot-from-bootloader) and P3 (direct-scanout observability).
 
 **S14-T9 verified on hardware (2026-09-13).** Final signed-artifact run: production image
 hygiene confirmed (no `/bin/sh`, busybox, dropbear/sshd), EFI kernel signed (`sbverify` OK),
