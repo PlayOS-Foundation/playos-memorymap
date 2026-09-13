@@ -223,6 +223,18 @@ link and run a minimal game on the host, and the installer became an app: the sh
 owns the disk picker + hold-A confirm (`SCREEN_INSTALLER`) and passes the chosen disk
 through `StartInstaller` → `PLAYOS_INSTALL_TARGET`.
 
+**S14-T10 verified on hardware (2026-09-13).** The installer now works end to end from the
+shell: Settings → System → Install PlayOS to internal disk → disk → hold A → the handoff is
+seamless (no blink, no console, compositor and `/data` stay up) → all 8 steps complete →
+reboot boots the installed system. Evidence: `installer.log` shows steps 0-7 ok
+(including the SSH-key seed) and `installer: target nvme0n1 is free of mounts`; the installed
+`/data` is fully populated (11 games, sessions log), `boot.json` is slot a / good with
+boot_count 1, and the internal disk has the documented 5 partitions
+(512 MiB ESP, 2x4 GiB slots, 64 MiB misc, remainder data).
+Three handoff bugs were found and fixed on the way (NULL trusted-client destroy listener →
+compositor SIGSEGV; ack-after-teardown deadlock; `nvme0n1` name parsing leaving the ESP
+mounted so `mkfs.fat` refused — see 08-gotchas.md).
+
 Still open on-device: SimpleDRM/low-graphics recovery (F3), the last T9 signing step,
 and the perf gaps.
 
