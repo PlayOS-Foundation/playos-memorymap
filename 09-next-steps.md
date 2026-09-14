@@ -28,12 +28,17 @@ Current pins (`versions.lock`): init `1c349c9`, compositor `45cbeb0`, shell
 1. **P1 — boot is 6.49 s to shell-ready, target < 5 s.** Attributed with
    `playos-refdistro/scripts/boot-timeline.sh`. The Ally has **no bootloader**
    (EFI stub boot; the command line is compiled in), so nothing can pre-declare
-   the active slot — the ~0.6 s NVMe/ESP wait before the pivot is hardware
-   bring-up and is not removable. What remains:
-   - **Ship a minimal-initramfs kernel for the installed path (the big one).**
-     `CONFIG_INITRAMFS_SOURCE=rootfs.cpio` embeds a 198 MB live rootfs (≈60 MB
-     inside the 74 MB `bzImage`), so an *installed* device unpacks a payload only
-     the live USB needs before pivoting to the squashfs. The installer already
+   the active slot. The kernel log shows the NVMe partitions exist at 1.76 s and
+   the kernel hands over at 1.81 s, while init's first ESP mount is at 4.61 s, so
+   **~2.7 s is spent inside the first (initramfs) init** — unlogged, because
+   `/data` is not mounted yet. That phase is the actual target. What remains:
+   - **Make the first init visible (`/dev/kmsg` markers), then cut what it
+     shows (the big one).** Candidates: the ESP FAT mount + sync, the squashfs
+     mount, the recovery button check, boot-stage FAT writes. Measured 0.10 s
+     warm for `udevadm trigger`+`settle`, so that is not automatically guilty.
+   - **Ship a minimal-initramfs kernel for the installed path (secondary).**
+     `CONFIG_INITRAMFS_SOURCE=rootfs.cpio` embeds a 198 MB live rootfs; the
+     1.81 s kernel hand-off bounds the unpack at ~1 s. The installer already
      writes `/BOOTX64.EFI` to the target ESP, so this is a payload change plus a
      second kernel build.
    - **Parallelise the shell's GL-context creation** with the compositor
