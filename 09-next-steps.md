@@ -1,79 +1,114 @@
 # 09 — Next Steps & How to Resume
 
-> Last updated: 2026-09-12
+> Last updated: 2026-09-13
 
 ## Where we are
 
-Sprints 0–13.7 are complete and validated on-device (including 11.5, 11.6, 12,
-13, 13.6, 13.7). Sprint 14 (Production Readiness) is in progress. Read
-[`05-sprint-status.md`](05-sprint-status.md) for the current head SHAs and
-evidence, and `playos-spec/src/sprints/Sprint-14.md` for the task grid.
+Sprints 0–13.7 are complete and validated on-device. **Sprint 14 (Production
+Readiness) is complete: T1–T10 all `done`** — T5 at 19/19 criteria, T7 with
+P2/P3/P4 measured and P1 improved, T9 with signed artifacts plus an A/B update
+*and* rollback applied on hardware, T10 with a full install on the Ally. See
+[`05-sprint-status.md`](05-sprint-status.md) for head SHAs and evidence, and
+`playos-spec/src/sprints/Sprint-14.md` for the task grid.
 
-## Next up: finish Sprint 14, then Sprint 15
+## Next up: Sprint 15 (Game Developer SDK)
 
-Sprint 14 remaining work — all hardware-gated (see Sprint-14.md):
+A self-contained `playos-sdk` (musl toolchain + `libplayos`/`libraylib`) with
+device/desktop/emulator testing. Already scaffolded in `playos-tools` (`f46f512`)
+and `playos-refdistro` (`scripts/export-sdk.sh`, `2e5fadc`); Sprint-14.md ends
+with a "Handoff to Sprint 15" section listing what it may assume. Read that
+before starting.
 
-1. **19-criterion MVP smoke test** on the ROG Ally (`scripts/mvp-smoke.sh`) —
-   T5.
-2. **Performance baseline** run (`scripts/perf-baseline.sh`) — T7; targets are
-   cold boot to shell < 5s, shell→game first frame < 3s, SYSTEM→overlay < 100ms,
-   game exit→shell < 500ms.
-3. **SimpleDRM / low-graphics recovery** validation — recovery must render
-   without AMDGPU (T6 acceptance gap).
-4. **T10 installer-as-an-app front-end** polish; **T9** final signed v0.3.0 run
-   + SDK-compile verification.
+Current pins (`versions.lock`): init `1c349c9`, compositor `45cbeb0`, shell
+`7089ebe`, spec `ea1c129`, samples `651ed31`, runtime `17c006a`, platform-api
+`f3e629c`, refdistro `068dc47`.
 
-Validation loop for the current overlay/screenshot work: build
-`make ally-dev-usb-image`, flash, and check the gestures, the pause overlay and
-screenshots:
+## Sprint 14 residuals (documented, not tasks)
 
-- **Gestures (swapped in S14, verified on hardware 2026-09-12):** tap
-  **COMMAND** = screenshot (in game and on the shell UI); tap **ARMOURY CRATE**
-  = in-game menu. A tap/hold split on one button is impossible — hid-asus
-  reports both as momentary pulses. Settings row: "Screenshot on COMMAND".
-- **Screenshots:** `screencopy` captures the composited output to
-  `/data/screenshots/playos-<epoch>.<ms>.png`; the wl_shm format must be
-  honoured (`0x34324258` = XBGR8888 on the Ally) or red/blue swap.
-- **Overlay:** hidden overlay ignores the gamepad, d-pad decoded from `ABS_HAT`,
-  focus list (Resume / Quit / Profile), B resumes, Quit needs a held A, and the
-  first input poll after `about_to_show` is now discarded (it used to replay the
-  gameplay backlog and dismiss the menu 2 ms after it appeared).
-- **Game exit on B:** fixed twice over — samples no longer self-quit on B, and
-  the shell no longer acts on UI input while suspended (the game-detail screen's
-  B handler was terminating the running game).
-- Recovery: `RollbackSlot` rollback and the non-blocking recovery watch.
-
-Current pins: init `3c7309d`, compositor `3862e4d`, shell `da26d88`,
-spec `280f5e8`, samples `651ed31`, refdistro `f0bd607`.
-
-Sprint 15 (Game Developer SDK) has already been scaffolded in `playos-tools`
-(`f46f512`) and `playos-refdistro` (`scripts/export-sdk.sh`, `2e5fadc`); it
-becomes the active sprint once Sprint 14's hardware gate closes.
+1. **P1 — boot is 6.49 s to shell-ready, target < 5 s.** Attributed with
+   `playos-refdistro/scripts/boot-timeline.sh`; three structural cuts remain:
+   pass the active slot from GRUB (`playos.slot=`) so the ESP/NVMe wait leaves
+   the critical path (~0.6 s); shrink the embedded initramfs (the ~2.5–3 s that
+   elapse before init runs); parallelise the shell's GL-context creation with
+   the compositor configure wait (~0.9–1.4 s, and it varies — measure a few
+   boots first).
+2. **F3 — no-DRM-device case.** Recovery needs no GL now (`playos-recovery`), but
+   a machine with *no DRM device at all* (no compositor, not even software)
+   would still need a kernel-console text UI.
 
 ## Open follow-ups
 
-1. **SimpleDRM / low-graphics recovery (F3).** Recovery still renders through
-   the compositor, so the compositor-failure entry point cannot show the menu
-   when graphics are what broke. Needs a software/SimpleDRM render path
-   (S14-T6 acceptance gap).
-2. **11.5 installer `wipefs` follow-up (non-blocking):** doesn't reliably clear
-   the inactive slot on reinstall; fresh installs still pivot correctly.
-3. **Status-bar text collision (cosmetic):** `PROFILE: BALANCED` and
-   `THERMAL: NORMAL` render run together as "BALANCEDTHERMAL".
-4. **Samples are "non-cooperative":** they do not ack the BACKGROUND lifecycle
-   within 500 ms, so init SIGSTOPs them when the overlay opens. Works, but they
-   should ack like cooperative games.
-5. **Overlay first frame:** the compositor publishes the overlay surface as soon
-   as the state flips, so one stale frame can appear before the client redraws.
-   Optionally publish only after the overlay's first commit.
-6. **In-game screenshots are silent** (the shell surface is hidden behind the
-   game) — the overlay could show a brief confirmation.
+1. **Installer `wipefs` follow-up (from 11.5).** Historically `wipefs` did not
+   reliably clear the inactive slot on reinstall (fresh installs pivoted fine
+   regardless). The installer now releases the target's mounts itself
+   (`playos_format_release_target`) and captures child output, which was written
+   with this in mind — but the symptom has not been re-tested since. Worth one
+   reinstall to confirm or close.
+2. **Installer progress ownership (proposal, not planned).** Today the shell
+   owns the front-end (disk list, hold-A confirm) and the standalone installer
+   takes the screen for the destructive phase, styled to match. A future step
+   could keep it all in the shell: extract `libplayos-install` from
+   `format.c`/`efi.c`, add `PrepareInstall` + `InstallProgress` IPC, run a
+   supervised `playos-install-worker`, and let the shell draw live progress and
+   completion. Polish only — the current flow is verified end to end.
+3. **Samples are "non-cooperative":** they do not ack BACKGROUND within 500 ms,
+   so init SIGSTOPs them when the overlay opens. Works, but they should ack like
+   cooperative games.
+4. **Internal install runs the old kernel.** The A/B payload is the rootfs, so
+   the installed system has today's userspace but not the F3 kernel
+   (SimpleDRM): a reinstall from the current USB image aligns them.
+5. **`playos-memorymap` has no pushable remote** (remote returns 404 / no
+   access), so its history lives only on this machine. Safety net:
+   `~/playos-memorymap.bundle` (complete history, `git bundle verify` passes).
+   Create the repo or provide a URL and push.
+6. **QEMU dev-rig mismatch:** the QEMU guest's `/data/log/compositor-stderr.log`
+   did not show the newest compositor lines although `rootfs.cpio` contains the
+   code. The device proves the code is fine; dev-tooling only, unresolved.
 
-Resolved on 2026-09-12: F1 (Rollback corrupted `boot.json`), F2 (4 s recovery
-watch on every boot), F4 (hidden overlay consumed gamepad input / Ally d-pad
-not decoded), B-in-game quitting (samples self-quit + the shell's suspended UI
-terminating the game), screencopy SIGABRT + role leak + red/blue swap, and the
-overlay's first-show instant dismiss (stale input backlog).
+Documented-but-unfixed gaps from `playos-spec/src/testing.md`: **P5** hostname
+identity (`uname -n` reports `(none)`), **P6** dev-image tools missing
+(`evtest`, `modetest`, `weston-info`), **P7** `playos-ctl` specified but not
+implemented (on-device diagnostics mean reading `/data/log/*` and `/sys`).
+
+## Validation loop: overlay, screenshots, input
+
+Build `make ally-dev-usb-image`, flash, then check the gestures, the pause
+overlay and screenshots:
+
+- **Gestures (swapped in S14, verified on hardware):** tap **COMMAND** =
+  screenshot (in game and on the shell UI); tap **ARMOURY CRATE** = in-game menu.
+  A tap/hold split on one button is impossible — hid-asus reports both as
+  momentary pulses. Settings row: "Screenshot on COMMAND".
+- **Screenshots:** `screencopy` captures the composited output to
+  `/data/screenshots/playos-<epoch>.<ms>.png`; the wl_shm format must be honoured
+  (`0x34324258` = XBGR8888 on the Ally) or red/blue swap. `playos-recovery`
+  writes its own PNGs (`recovery-<epoch>.png`) because the shell's gesture is
+  unavailable when the shell is the thing that failed.
+- **Overlay:** hidden overlay ignores the gamepad, d-pad decoded from `ABS_HAT`,
+  focus list (Resume / Quit / Profile), B resumes, Quit needs a held A, and the
+  first input poll after `about_to_show` is discarded (it used to replay the
+  gameplay backlog and dismiss the menu 2 ms after it appeared).
+- **Idle behaviour:** the shell is damage-driven — idle it settles at ~8 fps and
+  ~2.6% of a core. Only discrete input (keys, d-pad) counts as activity: the
+  right stick rests with a ±128 `ABS_RY` oscillation (~65 events/s), so raw
+  evdev traffic can never be the activity signal. Diagnostic screens (the Input
+  tab's Live Input Test) ask for full rate explicitly.
+- **Instrumentation to read first:** `playos-compositor: fps shell=N game=M
+  (commits/s) present zero-copy=X copied=Y` — per-role frame rate and how frames
+  reached the panel (zero-copy = direct scanout; measured 100% on the Ally).
+
+## Resolved recently (do not re-investigate)
+
+2026-09-12: F1 (`RollbackSlot` corrupted `boot.json`), F2 (4 s recovery watch on
+every boot), F4 (hidden overlay consumed gamepad input; Ally d-pad not decoded),
+B-in-game quitting, screencopy SIGABRT + role leak + red/blue swap, overlay
+first-show instant dismiss.
+
+2026-09-13: **F3 closed** (SimplEDRM + compositor software path + the GL-free
+`playos-recovery` client, verified in QEMU and on the Ally); **P2/P3/P4** (in-game
+fps, 100% direct scanout, damage-driven shell); **P1 first cuts** (7.66 → 6.49 s);
+**T10 install verified end-to-end** (8/8 steps, seamless handoff, failure returns
+to the shell).
 
 ## Suggested reading
 
