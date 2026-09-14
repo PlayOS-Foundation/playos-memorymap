@@ -258,7 +258,11 @@ period" before spawning the shell, 0.93 s of shell EGL/window init and 0.44 s to
 grace period is now a Wayland-socket connect-probe (logged: "ready after 0 ms") and the ESP retry polls
 at 25 ms instead of backing off: **cold boot → shell ready 7.66 s → 6.49 s (−1.17 s)**, `system ready`
 at 5.58 s. The ESP stage itself did not shrink — that wait is the kernel bringing up the NVMe, and it is
-critical-path only because boot counting/pivot need `/EFI` (fix: pass the slot from GRUB).
+critical-path by construction: the Ally has **no bootloader** (EFI stub boot, command line compiled in),
+so nothing can pre-declare the active slot — init must mount `/EFI`, read `boot.json` and pivot before
+user-space starts, which cannot happen before the kernel exposes the NVMe. The real P1 item is elsewhere:
+the installed system boots a kernel with the **live rootfs embedded** (`CONFIG_INITRAMFS_SOURCE=rootfs.cpio`,
+198 MB) and then pivots to the squashfs, so every installed boot unpacks a payload only the live USB needs.
 
 **P3 closed (2026-09-13): direct scanout is now measured, not assumed.** The compositor logs how each
 frame reached the panel (`present zero-copy=N copied=M`; zero-copy = presented without a renderer copy).
@@ -268,15 +272,17 @@ foreground**, i.e. the P4 gate holds in-game too.
 
 **Sprint 14 closed 2026-09-13: T1-T10 all `done`** (T5 19/19 with criterion 19 met via F3; T7 with P2/P3/P4
 measured and P1 improved and its residual documented). Residual items, none of them sprint tasks:
-P1's remaining ~1.5 s to the 5 s boot target (slot-from-GRUB ~0.6 s, initramfs diet, shell GL-init
+P1's remaining ~1.5 s to the 5 s boot target (a minimal-initramfs kernel for the installed path — the
+big one; the ~0.6 s NVMe/ESP wait is hardware bring-up and is not removable; shell GL-init
 parallelisation); F3's no-DRM-device case (no compositor at all needs a kernel-console UI); the
 `testing.md` gaps P5 (hostname identity), P6 (dev-image tools), P7 (`playos-ctl` unimplemented); the
 samples' missing BACKGROUND ack (they are SIGSTOPed when the overlay opens). Housekeeping: this repo has
 no pushable remote (30 commits; safety-net bundle at `~/playos-memorymap.bundle`), and the internal
 install runs the new userspace but the old kernel (no SimplEDRM) until it is reinstalled from the USB image.
 
-Remaining in Sprint 14: the rest of P1 only (initramfs/kernel ~2.5-3 s before init, the ESP/NVMe wait on
-the critical path - fixable by passing the slot from GRUB - and shell startup ~0.9-1.4 s).
+Remaining in Sprint 14: the rest of P1 only (the installed-path minimal initramfs — the ~2.5-3 s before
+init is mostly unpacking the embedded live rootfs; the ~0.6 s NVMe/ESP wait is hardware; shell startup
+~0.9-1.4 s).
 
 **S14-T9 verified on hardware (2026-09-13).** Final signed-artifact run: production image
 hygiene confirmed (no `/bin/sh`, busybox, dropbear/sshd), EFI kernel signed (`sbverify` OK),

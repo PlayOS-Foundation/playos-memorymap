@@ -26,12 +26,18 @@ Current pins (`versions.lock`): init `1c349c9`, compositor `45cbeb0`, shell
 ## Sprint 14 residuals (documented, not tasks)
 
 1. **P1 — boot is 6.49 s to shell-ready, target < 5 s.** Attributed with
-   `playos-refdistro/scripts/boot-timeline.sh`; three structural cuts remain:
-   pass the active slot from GRUB (`playos.slot=`) so the ESP/NVMe wait leaves
-   the critical path (~0.6 s); shrink the embedded initramfs (the ~2.5–3 s that
-   elapse before init runs); parallelise the shell's GL-context creation with
-   the compositor configure wait (~0.9–1.4 s, and it varies — measure a few
-   boots first).
+   `playos-refdistro/scripts/boot-timeline.sh`. The Ally has **no bootloader**
+   (EFI stub boot; the command line is compiled in), so nothing can pre-declare
+   the active slot — the ~0.6 s NVMe/ESP wait before the pivot is hardware
+   bring-up and is not removable. What remains:
+   - **Ship a minimal-initramfs kernel for the installed path (the big one).**
+     `CONFIG_INITRAMFS_SOURCE=rootfs.cpio` embeds a 198 MB live rootfs (≈60 MB
+     inside the 74 MB `bzImage`), so an *installed* device unpacks a payload only
+     the live USB needs before pivoting to the squashfs. The installer already
+     writes `/BOOTX64.EFI` to the target ESP, so this is a payload change plus a
+     second kernel build.
+   - **Parallelise the shell's GL-context creation** with the compositor
+     configure wait (~0.9–1.4 s, and it varies — measure a few boots first).
 2. **F3 — no-DRM-device case.** Recovery needs no GL now (`playos-recovery`), but
    a machine with *no DRM device at all* (no compositor, not even software)
    would still need a kernel-console text UI.
