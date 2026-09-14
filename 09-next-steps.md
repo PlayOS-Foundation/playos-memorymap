@@ -32,8 +32,17 @@ Current pins (`versions.lock`): init `1c349c9`, compositor `45cbeb0`, shell
    the kernel hands over at 1.81 s, while init's first ESP mount is at 4.61 s, so
    **~2.7 s is spent inside the first (initramfs) init** — unlogged, because
    `/data` is not mounted yet. That phase is the actual target. What remains:
+   - **Ship a fresh kernel + minimal initramfs as the install payload (the
+     critical path — proven 2026-09-13).** The boot marks showed the first init
+     is an *older binary*: it runs from the kernel's embedded initramfs, which
+     lives on the ESP and is never touched by A/B payloads (they only write the
+     inactive slot's `rootfs.squashfs`). Its 2.6 s phase is therefore both
+     unfixable and unmeasurable from the rootfs side. Booting the freshly built
+     USB image live is the test; a reinstall propagates it. Doing it minimally
+     also drops the ~1 s of unpacking a live rootfs an installed system never
+     uses.
    - **Make the first init visible (`/dev/kmsg` markers), then cut what it
-     shows (the big one).** Candidates: the ESP FAT mount + sync, the squashfs
+     shows.** Candidates: the ESP FAT mount + sync, the squashfs
      mount, the recovery button check, boot-stage FAT writes. Measured 0.10 s
      warm for `udevadm trigger`+`settle`, so that is not automatically guilty.
    - **Ship a minimal-initramfs kernel for the installed path (secondary).**
