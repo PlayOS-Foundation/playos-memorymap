@@ -260,8 +260,14 @@ at 25 ms instead of backing off: **cold boot → shell ready 7.66 s → 6.49 s (
 at 5.58 s. The ESP stage itself did not shrink — that wait is the kernel bringing up the NVMe, and it is
 critical-path only because boot counting/pivot need `/EFI` (fix: pass the slot from GRUB).
 
-Remaining in Sprint 14: the rest of P1 (initramfs/kernel ~2.5-3 s before init, shell startup ~0.9-1.4 s,
-slot-from-bootloader) and P3 (direct-scanout observability).
+**P3 closed (2026-09-13): direct scanout is now measured, not assumed.** The compositor logs how each
+frame reached the panel (`present zero-copy=N copied=M`; zero-copy = presented without a renderer copy).
+On the Ally: a 30 s game run gave **1684 zero-copy / 0 copied = 100% direct** (`fps shell=0 game=56`),
+and the whole session 2535 / 0. The same data shows the shell committing **0 frames/s while a game is
+foreground**, i.e. the P4 gate holds in-game too.
+
+Remaining in Sprint 14: the rest of P1 only (initramfs/kernel ~2.5-3 s before init, the ESP/NVMe wait on
+the critical path - fixable by passing the slot from GRUB - and shell startup ~0.9-1.4 s).
 
 **S14-T9 verified on hardware (2026-09-13).** Final signed-artifact run: production image
 hygiene confirmed (no `/bin/sh`, busybox, dropbear/sshd), EFI kernel signed (`sbverify` OK),
