@@ -44,13 +44,15 @@ Current pins (`versions.lock`): init `1c349c9`, compositor `45cbeb0`, shell
    (`playos_format_release_target`) and captures child output, which was written
    with this in mind — but the symptom has not been re-tested since. Worth one
    reinstall to confirm or close.
-2. **Installer progress ownership (proposal, not planned).** Today the shell
-   owns the front-end (disk list, hold-A confirm) and the standalone installer
-   takes the screen for the destructive phase, styled to match. A future step
-   could keep it all in the shell: extract `libplayos-install` from
-   `format.c`/`efi.c`, add `PrepareInstall` + `InstallProgress` IPC, run a
-   supervised `playos-install-worker`, and let the shell draw live progress and
-   completion. Polish only — the current flow is verified end to end.
+2. **Installer progress ownership — now tracked as
+   [Sprint 14.5 Shell-Owned Install Progress](../playos-spec/src/sprints/Sprint-14.5.md)**
+   (recorded 2026-09-13). Today the shell owns the front-end (disk list, hold-A
+   confirm) and the standalone installer takes the screen for the destructive
+   phase, styled to match. S14.5 keeps one engine (`libplayos-install`) and adds
+   a supervised screen-less `playos-install-worker` with `PrepareInstall` /
+   `InstallProgress` IPC, so the shell draws progress, completion and errors.
+   Polish only — the current flow is verified end to end, and the standalone
+   installer stays as the no-shell fallback.
 3. **Samples are "non-cooperative":** they do not ack BACKGROUND within 500 ms,
    so init SIGSTOPs them when the overlay opens. Works, but they should ack like
    cooperative games.
