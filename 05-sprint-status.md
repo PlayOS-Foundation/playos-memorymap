@@ -266,6 +266,15 @@ On the Ally: a 30 s game run gave **1684 zero-copy / 0 copied = 100% direct** (`
 and the whole session 2535 / 0. The same data shows the shell committing **0 frames/s while a game is
 foreground**, i.e. the P4 gate holds in-game too.
 
+**Sprint 14 closed 2026-09-13: T1-T10 all `done`** (T5 19/19 with criterion 19 met via F3; T7 with P2/P3/P4
+measured and P1 improved and its residual documented). Residual items, none of them sprint tasks:
+P1's remaining ~1.5 s to the 5 s boot target (slot-from-GRUB ~0.6 s, initramfs diet, shell GL-init
+parallelisation); F3's no-DRM-device case (no compositor at all needs a kernel-console UI); the
+`testing.md` gaps P5 (hostname identity), P6 (dev-image tools), P7 (`playos-ctl` unimplemented); the
+samples' missing BACKGROUND ack (they are SIGSTOPed when the overlay opens). Housekeeping: this repo has
+no pushable remote (30 commits; safety-net bundle at `~/playos-memorymap.bundle`), and the internal
+install runs the new userspace but the old kernel (no SimplEDRM) until it is reinstalled from the USB image.
+
 Remaining in Sprint 14: the rest of P1 only (initramfs/kernel ~2.5-3 s before init, the ESP/NVMe wait on
 the critical path - fixable by passing the slot from GRUB - and shell startup ~0.9-1.4 s).
 
