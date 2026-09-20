@@ -32,8 +32,18 @@ Current pins (`versions.lock`): init `1c349c9`, compositor `45cbeb0`, shell
    the kernel hands over at 1.81 s, while init's first ESP mount is at 4.61 s, so
    **~2.7 s is spent inside the first (initramfs) init** — unlogged, because
    `/data` is not mounted yet. That phase is the actual target. What remains:
-   - **Ship a fresh kernel + minimal initramfs as the install payload (the
-     critical path — proven 2026-09-13).** The boot marks showed the first init
+   - **RESOLVED 2026-09-20: the installed boot is 3.28 s (was 10.55 s), under the
+     5 s target.** Each image now declares itself on its compiled-in command line
+     (`playos.live=1` / `playos.installed=1`) instead of init trying to detect the
+     boot medium - which is impossible here (the stick does not exist at the pivot
+     decision; the firmware reports the same invalid `BootCurrent` for a stick
+     boot and an installed boot). `scripts/build-install-kernel.sh` builds both
+     kernels and the installer writes the installed one to the target ESP. Live
+     path number still to confirm (its log is on the stick).
+   - **Ship a fresh kernel + minimal initramfs as the install payload.** Now
+     optional rather than critical: it would shave the ~1.8 s kernel hand-off
+     (which unpacks the 198 MB live rootfs an installed system never uses) and
+     shrink the payload. The boot marks showed the first init
      is an *older binary*: it runs from the kernel's embedded initramfs, which
      lives on the ESP and is never touched by A/B payloads (they only write the
      inactive slot's `rootfs.squashfs`). Its 2.6 s phase is therefore both
