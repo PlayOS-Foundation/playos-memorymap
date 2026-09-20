@@ -133,6 +133,26 @@
   Wayland code that is almost always a `wl_listener` whose `notify` was never
   set, or an init function that was never called. Check both.
 
+## Boot medium, A/B slots and the live image
+
+- **The live USB image is live-only, by an explicit switch.** A stick's ESP
+  carries `EFI/playos/live-usb` (the medium marker) and `EFI/playos/live-boot`
+  (the switch); init refuses to pivot when it sees the switch on the same ESP
+  that carries the marker, and stays in the initramfs — which *is* the live
+  system. Both files are stamped by `scripts/gen-*-usb-image.sh`, and the
+  installer copies only `BOOTX64.EFI` to the target ESP, so an installed system
+  never inherits the switch.
+- **Why a switch instead of detection:** the Ally's firmware reports
+  `BootCurrent = 0x0006` while only `Boot0000-0002` exist, and the stick
+  (`Boot0002`) is booted through the removable-media *fallback* path. So no
+  in-band signal identifies the boot medium, and the pivot's slot lookup — which
+  matches partition *names* (`playos-a`/`playos-b`, shared with an installed
+  disk) — would pivot a live boot into the installed system. Symptom: a live
+  session that is really the installed one, and an installer that lists no
+  targets because it is running from the disk it was asked to install to.
+- **efivarfs is not auto-mounted** (no systemd), and `playos_booted_from_usb()`
+  needs it; init mounts it best-effort in `playos_mount_virtual()`.
+
 ## Power and idle behaviour
 
 - **Analog axes are never quiet.** The Ally's right stick rests with a +/-128
