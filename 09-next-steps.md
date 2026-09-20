@@ -89,10 +89,13 @@ Current pins (`versions.lock`): init `1c349c9`, compositor `45cbeb0`, shell
 4. **Internal install runs the old kernel.** The A/B payload is the rootfs, so
    the installed system has today's userspace but not the F3 kernel
    (SimpleDRM): a reinstall from the current USB image aligns them.
-5. **`playos-memorymap` has no pushable remote** (remote returns 404 / no
-   access), so its history lives only on this machine. Safety net:
-   `~/playos-memorymap.bundle` (complete history, `git bundle verify` passes).
-   Create the repo or provide a URL and push.
+5. **`playos-memorymap` is pushed normally** (fixed 2026-09-20). The earlier
+   "no pushable remote" note was wrong: the repo was reachable all along, but its
+   remote was named `playos-memorymap` instead of `origin`, so `git push origin`
+   failed with "No such remote" - which read like a 404. The remote is renamed,
+   40 commits are pushed, and tracking is set. Safety bundle (refreshed):
+   `~/playos-memorymap.bundle`.
+
 6. **QEMU dev-rig mismatch:** the QEMU guest's `/data/log/compositor-stderr.log`
    did not show the newest compositor lines although `rootfs.cpio` contains the
    code. The device proves the code is fine; dev-tooling only, unresolved.

@@ -277,7 +277,7 @@ big one; the ~0.6 s NVMe/ESP wait is hardware bring-up and is not removable; she
 parallelisation); F3's no-DRM-device case (no compositor at all needs a kernel-console UI); the
 `testing.md` gaps P5 (hostname identity), P6 (dev-image tools), P7 (`playos-ctl` unimplemented); the
 samples' missing BACKGROUND ack (they are SIGSTOPed when the overlay opens). Housekeeping: this repo has
-no pushable remote (30 commits; safety-net bundle at `~/playos-memorymap.bundle`), and the internal
+renamed to `origin` and pushed on 2026-09-20 (the earlier "no pushable remote" note was a misread of `git push origin` against a remote named `playos-memorymap`), and the internal
 install runs the new userspace but the old kernel (no SimplEDRM) until it is reinstalled from the USB image.
 
 Remaining in Sprint 14: the rest of P1 only (the installed-path minimal initramfs — the ~2.5-3 s before
