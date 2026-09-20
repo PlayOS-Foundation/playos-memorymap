@@ -11,9 +11,9 @@ P2/P3/P4 measured and P1 improved, T9 with signed artifacts plus an A/B update
 [`05-sprint-status.md`](05-sprint-status.md) for head SHAs and evidence, and
 `playos-spec/src/sprints/Sprint-14.md` for the task grid.
 
-## Next up: Sprint 15 (Game Developer SDK)
+## Next up: Sprint 14.5 (Shell-Owned Install Progress)
 
-A self-contained `playos-sdk` (musl toolchain + `libplayos`/`libraylib`) with
+**Sprint 14.5** makes the install stay inside PlayOS from confirm to completion: one `libplayos-install` engine, a screen-less supervised `playos-install-worker`, `PrepareInstall`/`InstallProgress` over the existing trusted socket, and shell-drawn progress/completion/errors. Its start-condition checklist is now fully ticked (the pre-flight found that `format.c`/`efi.c` need no callbacks - only the step dispatch in `main.c` needs lifting). **Then Sprint 15**, a self-contained `playos-sdk` (musl toolchain + `libplayos`/`libraylib`) with
 device/desktop/emulator testing. Already scaffolded in `playos-tools` (`f46f512`)
 and `playos-refdistro` (`scripts/export-sdk.sh`, `2e5fadc`); Sprint-14.md ends
 with a "Handoff to Sprint 15" section listing what it may assume. Read that

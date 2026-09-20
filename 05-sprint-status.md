@@ -319,3 +319,13 @@ and the perf gaps.
 
 `playos-spec/src/sprints/Sprint-<N>.md` — each has goal, decisions locked,
 task breakdown with status grid, acceptance criteria, and handoff notes.
+
+**S14 closed 2026-09-20 - P1 resolved on the installed path.** The boot medium is now declared per image
+(`playos.live=1` in the live image's kernel, `playos.installed=1` in the payload the installer writes to
+the target ESP) instead of being detected at runtime, which is impossible here: at the pivot decision the
+USB stick does not exist yet (the dock's hub chain; a hot-plug is ~270 ms) and the firmware reports the
+same invalid `BootCurrent` for a stick boot and an installed boot. Installed boot: **10.55 s → 3.28 s**
+to ShellReady, under the 5 s target. Live path: 5.63 s (0.63 s over, device-bound). Also closed: the
+live-boot boot accounting (live sessions no longer advance the installed slot's counters), and the
+`wipefs` follow-up (a full reinstall succeeded). Residuals: live-path 0.63 s, T9's CI release run, F3's
+no-DRM case, `playos-memorymap` having no remote.
