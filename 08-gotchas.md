@@ -142,14 +142,26 @@
   system. Both files are stamped by `scripts/gen-*-usb-image.sh`, and the
   installer copies only `BOOTX64.EFI` to the target ESP, so an installed system
   never inherits the switch.
-- **Why a switch instead of detection:** the Ally's firmware reports
-  `BootCurrent = 0x0006` while only `Boot0000-0002` exist, and the stick
-  (`Boot0002`) is booted through the removable-media *fallback* path. So no
-  in-band signal identifies the boot medium, and the pivot's slot lookup — which
-  matches partition *names* (`playos-a`/`playos-b`, shared with an installed
-  disk) — would pivot a live boot into the installed system. Symptom: a live
-  session that is really the installed one, and an installer that lists no
-  targets because it is running from the disk it was asked to install to.
+- **The live medium is identified under the pivot by its own ESP**: removable
+  disks are scanned for an ESP carrying `EFI/playos/live-usb`
+  (`playos_removable_esp_has_live_marker()`); when one is present init stays in
+  the initramfs. That check needs a **bounded wait** — the stick enumerates at
+  ~4.1 s while the pivot decision runs at ~2.1 s (measured), and the boot-time
+  shortening of the ESP stage is what removed the accidental 5.5 s cover that had
+  made live boots work. Gated on `playos_booted_from_usb() != 0`, so an installed
+  boot (a registered, non-USB boot entry) does not wait.
+- **The `removable` sysfs flag IS usable**: a SanDisk stick reports `removable=1`
+  both directly and behind a dock/hub. An earlier note here claimed the dock
+  reported 0 — that was wrong, inferred from a `by-label` symlink that alternates
+  between the stick and an installed disk which share filesystem labels.
+- **`BootCurrent` is not usable on this firmware**: the Ally reports
+  `BootCurrent = 0x0006` while only `Boot0000-0002` exist (the stick is
+  `Boot0002`), because it boots removable media through its fallback path and
+  never persists the transient entry. `playos_booted_from_usb()` therefore
+  cannot be the primary signal for the boot medium.
+- **A live boot still reads the installed disk's boot.json** while `/EFI` is the
+  name-found (internal) ESP, so its boot accounting can advance the installed
+  slot's `boot_count`. Gate that accounting on the same live-medium check.
 - **efivarfs is not auto-mounted** (no systemd), and `playos_booted_from_usb()`
   needs it; init mounts it best-effort in `playos_mount_virtual()`.
 
