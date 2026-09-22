@@ -361,3 +361,31 @@ QEMU/host passing ≠ done. Sprints 11.5–13.7 are on-device validated on the R
 Ally and ZenBook. The remaining hardware gate is Sprint 14: the 19-criterion
 MVP smoke test, the performance baseline, and SimpleDRM/low-graphics recovery
 validation. See [`09-next-steps.md`](09-next-steps.md).
+
+## When two callers share code, every implicit assumption surfaces (S14.5)
+
+Extracting the install engine into `libplayos-install` so the standalone installer
+and the screen-less `playos-install-worker` could share it was right, but the
+second front-end exposed four things the first one had always quietly done for it.
+Three are the same shape, and none appeared in a build, a code review or a QEMU
+run - only on the device:
+
+- **Name-based lookup is ambiguous when both media share partition names.**
+  `playos-a` exists on the stick *and* on the internal disk (where it is a raw
+  squashfs slot, not the ext2 payload). Init's label lookup found the internal one
+  and `mount` failed with `EINVAL`, so the worker never started. The shell already
+  found the payload by *contents*, so it now passes that device through the IPC.
+- **Device paths are not normalised.** The shell sends `/dev/nvme0n1`; the step
+  helpers add `/dev/` themselves, giving `/dev//dev/nvme0n1`. Normalise once, at
+  the shared boundary, and check both spellings.
+- **Mountpoints are preconditions.** `efi.c` mounts at `/mnt/efi` without creating
+  it; only the standalone installer's `main()` did that. The error reads
+  `mount /dev/nvme0n1p1: No such file or directory`, which looks like a missing
+  *device* but is a missing *directory* - check `ls -ld` on the mountpoint before
+  believing a device error.
+- **Replacing a call is not replacing its consequences.** The shell's hold branch
+  ended with `current_screen = SCREEN_SETTINGS`, correct when the install was a
+  handoff to a separate app. The new flow kept drawing its cards - on a screen the
+  user was not looking at, so a complete, successful install looked like nothing
+  happened. When you replace a mechanism, grep for what the *old* mechanism was
+  responsible for, not just the call you removed.
