@@ -1,6 +1,6 @@
 # 04 — Build & Test
 
-> Last updated: 2026-08-24
+> Last updated: 2026-09-22
 
 ## Per-repo builds (host, fast)
 
@@ -43,15 +43,21 @@ make qemu-build         # QEMU image  (~40 min first time)
 make qemu-run           # boot it in QEMU/OVMF
 make qemu-pivot-check   # A/B slot pivot + forced rollback in QEMU
 
-make ally-build               # ROG Ally dev image (with debug tools)
-make ally-production-build    # ROG Ally production image (Sprint 12, stripped)
-make ally-usb-image           # USB-bootable disk image
-make ally-flash               # flash to USB (prompts for device)
+make ally-build               # ROG Ally dev rootfs (with debug tools)
+make ally-production-build    # ROG Ally production rootfs (Sprint 12, stripped)
+make ally-dev-usb-image       # dev live+installer USB image (SSH; needs ally-build)
+make ally-prod-usb-image      # prod live+installer USB image (no SSH)
+make ally-flash               # flash dev image to USB (prompts for device)
 
-make installer-build          # installer image
-make installer-image          # one-shot installer USB (needs ally-build)
+make intel-build              # Intel PC dev rootfs
+make intel-dev-usb-image      # Intel dev live+installer USB image
 make update-bundle            # dev-signed .playosb from ally rootfs.squashfs
 ```
+
+> There are **no `installer-build`/`installer-image` targets** (S13.7 + S14.5): the
+> installer is now a PlayOS app the shell drives (Settings → System → Install PlayOS),
+> carried inside the consolidated `*-dev-usb-image`/`*-prod-usb-image` images. The
+> standalone `playos-installer` remains as the no-shell fallback.
 
 Buildroot outputs go to `output/<target>` (`qemu`, `ally`, `ally-production`, `installer`).
 Local PlayOS packages are `dirclean`ed before every build so `src/` edits are always picked up.

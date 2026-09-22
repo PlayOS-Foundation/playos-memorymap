@@ -1,7 +1,7 @@
 # PlayOS Onboarding Guide
 
 > **Audience:** AI agents (and humans) picking up the PlayOS codebase for the first time.
-> **Last updated:** 2026-08-24 · **State:** Sprints 0–12 complete and validated on-device; Sprint 13 next.
+> **Last updated:** 2026-09-22 · **State:** Sprints 0–14 (incl. 11.5, 11.6, 13.6, 13.7, 14, 14.5) complete and validated on-device; **Sprint 15 (Game Developer SDK) in progress** — T1–T6 done, T7/T8 pending.
 
 This directory is the **memory map** for the PlayOS solution under `/home/nikmes/playos`.
 It is intentionally a *map*, not a duplicate of the specs — it tells you where things
@@ -57,14 +57,14 @@ Full details: [`01-overview.md`](01-overview.md) and [`02-architecture.md`](02-a
 
 ## 4. Fast facts
 
-- **14 directories, 13 git repos** under `/home/nikmes/playos`. `playos-memorymap` is docs-only (not a repo).
+- **14 directories, all 14 git repos** under `/home/nikmes/playos`. `playos-memorymap` is docs-only in content but is itself a git repo.
 - **Language:** C99 everywhere (no C11 atomics, no VLAs). See `06-conventions.md`.
 - **PID 1** is `playos-init` (static, musl), installed at `/init`. BusyBox is NOT init.
-- **IPC:** Unix sockets + a framed protocol defined in `playos-init/ipc/ipc.h` (canonical copy; synced to `playos-refdistro/src/playos-init/ipc/`).
+- **IPC:** Unix sockets + a framed protocol defined in `playos-init/ipc/ipc.h` (canonical; `playos-refdistro/src/playos-init` is a symlink to that repo, so there is only one copy).
 - **Compositor:** wlroots 0.20 (headers/libs in `/opt/playos-deps` on this machine).
 - **Games run as `playos-game` (uid/gid 1001)**, supplementary groups `audio`, `render`, `input`, sandboxed by Landlock (default-deny) + seccomp (deny-list) + `PR_SET_NO_NEW_PRIVS`.
-- **All repos clean + committed** as of 2026-08-24. Head SHAs are listed in `05-sprint-status.md`.
-- **Sprints 0–12 complete** (incl. 11.5, 11.6, 12, validated on-device). Sprint 13 is next.
+- **All repos clean + committed** as of 2026-09-22. Head SHAs are listed in `05-sprint-status.md`.
+- **Sprints 0–14 complete** (incl. 11.5, 11.6, 13.6, 13.7, 14, 14.5, validated on-device). **Sprint 15 (Game Developer SDK) is in progress:** T1–T6 done and verified; T7 (emulator profile) and T8 (reference-sample validation) pending.
 
 ---
 
@@ -78,7 +78,7 @@ Full details: [`01-overview.md`](01-overview.md) and [`02-architecture.md`](02-a
 | Change the home UI/settings/library | `playos-shell` (`src/screen_*.c`, `src/input.c`) |
 | Change trusted IPC / control socket policy | `playos-runtime` (`src/trusted_control.c`) + `playos-init/ipc/` |
 | Change the OS image/packages/kernel/defconfigs | `playos-refdistro` (`br2-external/`, `Makefile`, `versions.lock`) — see [`10-build-system.md`](10-build-system.md) |
-| Build a QEMU / Ally / installer / production image | `playos-refdistro` Makefile targets (`make qemu-build`, `ally-build`, `ally-production-build`, `installer-image`, …) |
+| Build a QEMU / Ally / Intel / production image | `playos-refdistro` Makefile targets (`make qemu-build`, `ally-dev-usb-image`, `ally-prod-usb-image`, `intel-dev-usb-image`, …) |
 | Change what should be built (specs) | `playos-spec` (`src/sprints/*.md`, `src/*.md`) |
 | Look at reference games | `playos-samples` (11 sample games) |
 | Hardware notes (ROG Ally) | `playos-reference-devices` |
@@ -99,9 +99,11 @@ Full details: [`01-overview.md`](01-overview.md) and [`02-architecture.md`](02-a
 
 ## 7. If you are resuming autonomous work
 
-Start at [`09-next-steps.md`](09-next-steps.md). The next sprint is Sprint 13 (Intel expansion) —
-read `playos-spec/src/sprints/Sprint-13.md` and follow the spec-first workflow. Housekeeping is
-current: `PLAYOS_SPEC_COMMIT` in `playos-refdistro/versions.lock` is pinned to `29dfd08`.
+Start at [`09-next-steps.md`](09-next-steps.md). The next sprint is **Sprint 15 (Game Developer SDK)** and it is
+already underway — read `playos-spec/src/sprints/Sprint-15.md` (spec head `0baf5d1`; T1–T6 done, T7 emulator
+profile and T8 reference-sample validation remain) and follow the spec-first workflow.
+`PLAYOS_SPEC_COMMIT` in `playos-refdistro/versions.lock` lags HEAD (`4e8dbf5`) because the S15 commits are
+host/SDK-side; re-check the pin before a release.
 
 ---
 

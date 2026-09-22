@@ -1,22 +1,22 @@
 # 05 — Sprint Status
 
-> **Last updated: 2026-09-12** — Sprints 11.5, 11.6, 12, 13, 13.6, and 13.7 all closed (validated on-device). Sprint 14 in progress (production readiness): recovery + pause-overlay iteration landed; awaiting the on-device 19-criterion smoke/perf pass.
-> Specs live in `playos-spec/src/sprints/`; this file summarizes state and evidence.
+> **Last updated: 2026-09-22** — Sprints 11.5, 11.6, 12, 13, 13.6, 13.7, 14, and 14.5 are closed (validated on-device; 14.5 has two parked verification checks, below). **Sprint 15 (Game Developer SDK) is in progress:** T1–T6 done and verified; T7 (emulator profile) and T8 (reference-sample validation) not started.
+> Specs live in `playos-spec/src/sprints/`; this file summarizes state and evidence. Head SHAs are as of 2026-09-22.
 
 ## Head SHAs (all repos clean on `main`)
 
 | Repo | HEAD |
 |---|---|
-| playos-spec | `579d862` spec: ARMOURY CRATE screenshot gesture; hold-COMMAND impossible (S14) |
-| playos-init | `3c7309d` init: poll-based IPC wait (removes 1s control latency) (S14) |
-| playos-compositor | `f20597b` compositor: wlr-screencopy manager for screenshots (S14) |
-| playos-runtime | `01c193b` runtime: playos_trusted_rollback_slot wrapper (S14) |
-| playos-refdistro | `7862b3c` versions.lock: shell gesture fix + spec (S14) |
-| playos-platform-api | `f3e629c` platform-api: Doxygen docs + examples + getting-started (S14 T3) |
-| playos-shell | `ec0f9e5` shell: screenshots on ARMOURY CRATE tap; edge-triggered gestures (S14) |
-| playos-samples | `2aaec17` fix cel shading white car |
+| playos-spec | `0baf5d1` spec: Sprint 15 grid — T5/T6 done and verified |
+| playos-init | `1518021` sup: mount the payload partition the shell verified (S14.5) |
+| playos-compositor | `45cbeb0` compositor: report direct scanout (S14 P3) |
+| playos-runtime | `4b6426a` trusted: StartInstaller carries the payload device (S14.5) |
+| playos-refdistro | `ea3e1f1` export-sdk: detect an X11-only desktop raylib (S15) |
+| playos-platform-api | `231e4a5` platform-api: desktop shim test — mapping + storage root (S15-T5) |
+| playos-shell | `3f25a53` shell: stop leaving the installer screen when the install starts (S14.5) |
+| playos-samples | `651ed31` samples: no B-quit — platform owns game exit (S14) |
 | playos-raylib | `dbc56a8` (6.0 tag, pinned in versions.lock) |
-| playos-tools | `f46f512` sdk: toolchain/pkg-config/profile scripts + docs (S15-T4 scaffolding) |
+| playos-tools | `e4b9d4d` sdk: build-desktop.sh uses the SDK's desktop artifacts (S15-T6) |
 | others | unchanged (docs/cloud) |
 
 ## Sprints 0–11: complete
@@ -338,3 +338,31 @@ card appears, and "A: Reboot now" boots the installed system (`/dev/nvme0n1p2`,
 sprint doc: the forced-failure error card, and a standalone-installer rerun.
 Evidence and the four hardware-only defects it found:
 `playos-refdistro/docs/s14.5-install-verification-2026-09-22.md`.
+
+## Sprint 15 (Game Developer SDK) — in progress, T1–T6 done (2026-09-22)
+
+T1–T6 are done and verified; see `playos-spec/src/sprints/Sprint-15.md` for the
+grid and evidence. The shipped SDK is a 409 MB relocatable
+`x86_64-buildroot-linux-musl` toolchain plus `libplayos` (`PLAYOS_API_VERSION 1`)
+and `libraylib` with the `PLATFORM_PLAYOS` backend, CMake toolchain + `pkg-config`
+files, and the `desktop` host shim/profile. A sample built entirely through the
+SDK runs on the Ally (`device`, musl) and in a host window (`desktop`).
+`scripts/export-sdk.sh` (refdistro) populates `playos-tools/sdk/`; the profile
+scripts (`build-device.sh`, `build-desktop.sh`, `build-emulator.sh`) and
+`docs/sdk.md` live in `playos-tools`.
+
+- **T1** toolchain tarball (relocatable, verified by relocating + compiling)
+- **T2** `libplayos` headers + musl libs
+- **T3** musl `libraylib` with `PLATFORM_PLAYOS`
+- **T4** CMake toolchain + `pkg-config` for `device`
+- **T5** desktop host shim (keyboard/gamepad → controller ABI, lifecycle no-ops)
+- **T6** desktop build profile
+- **T7** emulator profile — *not started*
+- **T8** reference sample across all profiles — *not started*
+
+Caveats: the desktop raylib is X11-only unless `libdecor-0-dev` is present
+(`export-sdk.sh` now detects and reports this); the refdistro HEAD commit
+`ea3e1f1` is labelled `S15-T7` but is a desktop-export follow-up, not the
+emulator profile. `versions.lock` lags HEAD for `spec` (`4e8dbf5`),
+`platform-api` (`f3e629c`), and `shell` (`f32727f`); the S15 commits are
+host/SDK-side and were not pinned.

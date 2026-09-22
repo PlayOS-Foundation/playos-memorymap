@@ -1,7 +1,14 @@
 # 10 — Build System: How Images Are Produced
 
-> Last updated: 2026-08-22
+> Last updated: 2026-09-22
 > All paths relative to `playos-refdistro/` unless stated otherwise.
+>
+> **⚠ Partly historical.** Sections 2 and 5.2 still describe the pre-S13.7
+> three-image model (a separate installer defconfig, an `installer-image` target,
+> and `gen-installer-usb-image.sh`); those no longer exist. The installer is now a
+> PlayOS app shipped inside the consolidated `gen-ally-usb-image.sh` /
+> `gen-intel-usb-image.sh` live USB images (S13.7, reworked by S14.5). Section 3's
+> defconfig table is corrected below; `make help` is the authoritative target list.
 
 This file explains, end-to-end, how the PlayOS build system turns source code
 into bootable images for **QEMU**, the **ROG Ally**, and the **installer USB**.
@@ -41,15 +48,14 @@ make qemu-run           boot output/qemu with OVMF (scripts/qemu-boot-check.sh)
 make qemu-pivot-check   synthetic A/B disk; verify slot pivot + forced rollback
 
 # ROG Ally
-make ally-build             dev image → output/ally
-make ally-production-build  production image → output/ally-production
-make ally-usb-image         assemble USB-bootable disk image (needs ally-build)
+make ally-build             dev rootfs → output/ally
+make ally-production-build  production rootfs → output/ally-production
+make ally-dev-usb-image     dev live+installer USB image (SSH)
+make ally-prod-usb-image    prod live+installer USB image (no SSH)
 make ally-flash             print the dd/flash command
 
-# Installer
-make installer-build        installer rootfs → output/installer
-make installer-image        assemble installer USB (needs installer-build + ally-build)
-make installer-flash        print the dd/flash command
+# Intel PC
+make intel-build / intel-dev-usb-image / intel-flash
 
 # Updates
 make update-bundle          dev-signed .playosb from output/ally/images/rootfs.squashfs
@@ -74,10 +80,13 @@ Every `*-build` target runs three Buildroot invocations:
 | Defconfig (`br2-external/configs/`) | Output dir | Purpose |
 |---|---|---|
 | `playos_qemu_x86_64_defconfig` | `output/qemu` | dev target; generic x86_64, softpipe GL, GRUB2 EFI, separate kernel+initramfs |
-| `playos_ally_defconfig` | `output/ally` | ROG Ally **dev** image (haswell, amdgpu, BusyBox+Dropbear+evtest, embedded initramfs) |
+| `playos_ally_defconfig` | `output/ally` | ROG Ally **dev** image (amdgpu, BusyBox+Dropbear+evtest, embedded initramfs) |
 | `playos_ally_production_defconfig` | `output/ally-production` | ROG Ally **production** (Sprint 12: no BusyBox/Dropbear/evtest, post-build lint) |
-| `playos_ally_installer_defconfig` | `output/installer` | one-shot installer (kernel cmdline `playos.mode=install`) |
-| `playos_installer_qemu_defconfig` | *(no Makefile target)* | graphical installer UI under QEMU (virtio-gpu, softpipe) |
+| `playos_intel_pc_defconfig` | `output/intel` | Intel PC (S13: i915 + Mesa iris, HDA; NVIDIA dGPU ignored) |
+
+(The separate `playos_ally_installer_defconfig` / `playos_installer_qemu_defconfig`
+and the `output/installer` target are gone — S13.7 consolidated the installer into
+the live USB images, and S14.5 moved the install UI into the shell.)
 
 Key Buildroot knobs per defconfig:
 

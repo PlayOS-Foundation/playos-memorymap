@@ -1,27 +1,36 @@
 # 09 — Next Steps & How to Resume
 
-> Last updated: 2026-09-13
+> Last updated: 2026-09-22
 
 ## Where we are
 
-Sprints 0–13.7 are complete and validated on-device. **Sprint 14 (Production
-Readiness) is complete: T1–T10 all `done`** — T5 at 19/19 criteria, T7 with
-P2/P3/P4 measured and P1 improved, T9 with signed artifacts plus an A/B update
-*and* rollback applied on hardware, T10 with a full install on the Ally. See
+Sprints 0–14 and 14.5 are complete and validated on-device (14.5 has two parked
+verification checks, below). **Sprint 15 (Game Developer SDK) is in progress:**
+T1–T6 are `done` and verified (toolchain, `libplayos`, `libraylib`,
+CMake/pkg-config, desktop shim, desktop profile); **T7 (emulator profile) and
+T8 (reference-sample validation) are not started.** See
 [`05-sprint-status.md`](05-sprint-status.md) for head SHAs and evidence, and
-`playos-spec/src/sprints/Sprint-14.md` for the task grid.
+`playos-spec/src/sprints/Sprint-15.md` for the task grid.
 
 ## Next up: Sprint 15 (Game Developer SDK)
 
-**Sprint 14.5** makes the install stay inside PlayOS from confirm to completion: one `libplayos-install` engine, a screen-less supervised `playos-install-worker`, `PrepareInstall`/`InstallProgress` over the existing trusted socket, and shell-drawn progress/completion/errors. Its start-condition checklist is now fully ticked (the pre-flight found that `format.c`/`efi.c` need no callbacks - only the step dispatch in `main.c` needs lifting). **Then Sprint 15**, a self-contained `playos-sdk` (musl toolchain + `libplayos`/`libraylib`) with
-device/desktop/emulator testing. Already scaffolded in `playos-tools` (`f46f512`)
-and `playos-refdistro` (`scripts/export-sdk.sh`, `2e5fadc`); Sprint-14.md ends
-with a "Handoff to Sprint 15" section listing what it may assume. Read that
-before starting.
+**Sprint 14.5** (Shell-Owned Install Progress) is done — one `libplayos-install`
+engine, a screen-less supervised `playos-install-worker`, and
+`PrepareInstall`/`InstallProgress` over the trusted socket — with two
+verification checks parked (below). **Sprint 15** is now the active work: the
+self-contained `playos-sdk` already ships the musl toolchain,
+`libplayos`/`libraylib`, CMake/pkg-config, and the `device` + `desktop`
+profiles (T1–T6). What remains is **T7** (`scripts/build-emulator.sh` runs the
+`device` artifact in the PlayOS QEMU/container image; a
+`playos_emulator_defconfig` provides the boot image) and **T8** (build a
+reference sample entirely through the SDK and record per-profile results).
+`export-sdk.sh` is in `playos-refdistro`; the profile scripts and `docs/sdk.md`
+are in `playos-tools`.
 
-Current pins (`versions.lock`): init `1c349c9`, compositor `45cbeb0`, shell
-`7089ebe`, spec `ea1c129`, samples `651ed31`, runtime `17c006a`, platform-api
-`f3e629c`, refdistro `068dc47`.
+Current pins (`versions.lock`, 2026-09-22): init `1518021`, compositor `45cbeb0`,
+shell `f32727f`, spec `4e8dbf5`, samples `651ed31`, runtime `4b6426a`,
+platform-api `f3e629c`. Spec/platform-api/shell lag their repo HEADs because the
+S15 commits are host/SDK-side; re-check before a release.
 
 ## Sprint 14 residuals (documented, not tasks)
 
