@@ -329,3 +329,12 @@ to ShellReady, under the 5 s target. Live path: 5.63 s (0.63 s over, device-boun
 live-boot boot accounting (live sessions no longer advance the installed slot's counters), and the
 `wipefs` follow-up (a full reinstall succeeded). Residuals: live-path 0.63 s, T9's CI release run, F3's
 no-DRM case, `playos-memorymap` having no remote.
+
+**S14.5 (Shell-Owned Install Progress) — 4 of 5 tasks done, 2026-09-22.** T1–T4 are
+complete and the shell-driven install is verified on hardware end to end: the shell
+stays on the installer screen, progress and percentage are visible, the success
+card appears, and "A: Reboot now" boots the installed system (`/dev/nvme0n1p2`,
+`boot.json` `slot_a` good). Two T5 checks are parked with instructions in the
+sprint doc: the forced-failure error card, and a standalone-installer rerun.
+Evidence and the four hardware-only defects it found:
+`playos-refdistro/docs/s14.5-install-verification-2026-09-22.md`.

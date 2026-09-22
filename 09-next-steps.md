@@ -11,7 +11,7 @@ P2/P3/P4 measured and P1 improved, T9 with signed artifacts plus an A/B update
 [`05-sprint-status.md`](05-sprint-status.md) for head SHAs and evidence, and
 `playos-spec/src/sprints/Sprint-14.md` for the task grid.
 
-## Next up: Sprint 14.5 (Shell-Owned Install Progress)
+## Next up: Sprint 15 (Game Developer SDK)
 
 **Sprint 14.5** makes the install stay inside PlayOS from confirm to completion: one `libplayos-install` engine, a screen-less supervised `playos-install-worker`, `PrepareInstall`/`InstallProgress` over the existing trusted socket, and shell-drawn progress/completion/errors. Its start-condition checklist is now fully ticked (the pre-flight found that `format.c`/`efi.c` need no callbacks - only the step dispatch in `main.c` needs lifting). **Then Sprint 15**, a self-contained `playos-sdk` (musl toolchain + `libplayos`/`libraylib`) with
 device/desktop/emulator testing. Already scaffolded in `playos-tools` (`f46f512`)
@@ -161,3 +161,26 @@ to the shell).
   `WARN: seccomp filter failed` lines at game launch.
 - Game log shows the title running; `/data/saves/<id>` owned by uid 1001.
 - `ps` shows the game under PID 1 as `playos-game`.
+
+## Parked (revisit later, agreed 2026-09-22)
+
+Two S14.5 verification checks, with exact repro steps in
+`playos-spec/src/sprints/Sprint-14.5.md`:
+
+1. **Forced failure** — kill `playos-install-worker` mid-install; expect the error
+   card (not a stalled bar). The sprint's own acceptance line.
+2. **Standalone installer rerun** — `PLAYOS_INSTALL_TARGET=… playos-installer`;
+   confirms the engine extraction left that front-end unchanged.
+
+Carried from Sprint 14, unchanged:
+
+3. **Live-path boot 5.63 s** vs the <5 s target — 0.63 s over, device-bound (the
+   dock's USB hub chain means the stick's partitions are not usable until ~4.6 s).
+   The only fix is deferring the `/data` mount; the installed path is 3.28 s and
+   meets the target.
+4. **T9's CI release run** — `release.yml` exists and the signing is verified by
+   hand on hardware; one green CI run remains.
+5. **F3's no-DRM case** — recovery no longer needs GL, but a machine with no DRM
+   device at all would still need a console text UI.
+6. **Samples don't ack BACKGROUND** — init SIGSTOPs them instead; cosmetic.
+7. **QEMU dev-rig log mismatch** — dev tooling only.
