@@ -33,8 +33,8 @@ half of T8.
 
 Current pins (`versions.lock`, 2026-09-22): init `4f9c599`, compositor `45cbeb0`,
 shell `f32727f`, spec `2a152b3`, samples `443128f`, runtime `4b6426a`,
-platform-api `f3e629c`. platform-api/shell lag their repo HEADs because those
-S15 commits are host/SDK-side; re-check before a release.
+platform-api `ff6ec10`. shell still lags its repo HEAD because those S15 commits
+are host/SDK-side; re-check before a release.
 
 S16 firmware note: the Ally's **internal** Wi-Fi is the AMD RZ616 = **MediaTek
 MT7922** (`mt7921e`, PCI `14c3:0616`), so T1 enables

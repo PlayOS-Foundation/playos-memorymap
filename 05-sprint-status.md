@@ -11,8 +11,8 @@
 | playos-init | `4f9c599` init: playos.autostart kernel token for the emulator (S15-T7) |
 | playos-compositor | `45cbeb0` compositor: report direct scanout (S14 P3) |
 | playos-runtime | `4b6426a` trusted: StartInstaller carries the payload device (S14.5) |
-| playos-refdistro | `e8c5ab0` refdistro: ship the Invaders sample; KVM-aware emulator runner |
-| playos-platform-api | `231e4a5` platform-api: desktop shim test — mapping + storage root (S15-T5) |
+| playos-refdistro | `fd21595` versions.lock: bump platform-api to ff6ec10 (evdev fix) |
+| playos-platform-api | `ff6ec10` input(evdev): stop closing device nodes during discovery |
 | playos-shell | `3f25a53` shell: stop leaving the installer screen when the install starts (S14.5) |
 | playos-samples | `443128f` invaders: quiet sample (diagnostics stripped; EndDrawing fix kept) |
 | playos-raylib | `dbc56a8` (6.0 tag, pinned in versions.lock) |
@@ -419,10 +419,26 @@ QEMU emulator (`emulator`). `scripts/export-sdk.sh` (refdistro) populates
   > 10 ms (worst 3.1 ms); `dmesg` is clean; 1 Hz writes+fsync to `/data/log` are
   fast. Present path is 100 % zero-copy direct scanout, as designed.
 
-  **Fix belongs in `playos-platform-api` (input backend):** enumerate input
-  devices via sysfs (`/sys/class/input/event*/device/name` + `capabilities/*`)
-  and open **only** the matching node, so a scan never opens+closes 32 evdev
-  nodes; and back the missing-node rescan off well beyond 2 s. Not yet done.
+  **FIXED — `playos-platform-api` `ff6ec10`** (pin bumped, refdistro `fd21595`).
+  Discovery now opens each `/dev/input/eventN` **at most once** and keeps the
+  handle in a small cache (`node_fd()`), evaluating predicates against the cached
+  fd; `node_fd_release()` is the only place a device handle is closed. A scan
+  costs a few ioctls and closes nothing, so the 2 s missing-class retry is
+  harmless.
+
+  **Verified on the ROG Ally, same client binary, 25 samples @ 0.4 s:**
+  *before* → 5 samples in `__wait_rcu_gp`, once every **2.0 s**, ~0.4 s each
+  (CPU counter frozen across each stall); *after* → **0** samples, all in
+  `hrtimer_nanosleep`, CPU advancing smoothly. Gamepad + vendor-node discovery
+  unchanged (still found on the first pass).
+
+  This also explains the dead Armoury button: the shell uses the same backend,
+  and the repeated close of the hid-asus vendor node (`/dev/input/event8`) stopped
+  it delivering events — the shell logged its last `asus raw EV_KEY` at t=128 and
+  none afterwards while still holding fd 19 open. Verified on-device by
+  bind-mounting the fixed `libplayos.so.0` over the system one
+  (`mount --bind /data/lib/libplayos.so.0 /usr/lib/libplayos.so.0`; **not**
+  persistent — a reboot reverts it) and restarting the shell + overlay.
 
 Caveats: the desktop raylib is X11-only unless `libdecor-0-dev` is present
 (`export-sdk.sh` reports this; before this session's fix it *aborted* at the
