@@ -11,10 +11,10 @@
 | playos-init | `4f9c599` init: playos.autostart kernel token for the emulator (S15-T7) |
 | playos-compositor | `45cbeb0` compositor: report direct scanout (S14 P3) |
 | playos-runtime | `4b6426a` trusted: StartInstaller carries the payload device (S14.5) |
-| playos-refdistro | `fd21595` versions.lock: bump platform-api to ff6ec10 (evdev fix) |
+| playos-refdistro | `453ecb1` versions.lock: bump samples (invaders procedural SFX) |
 | playos-platform-api | `ff6ec10` input(evdev): stop closing device nodes during discovery |
 | playos-shell | `3f25a53` shell: stop leaving the installer screen when the install starts (S14.5) |
-| playos-samples | `443128f` invaders: quiet sample (diagnostics stripped; EndDrawing fix kept) |
+| playos-samples | `d662b5f` invaders: procedural SFX (no asset files) |
 | playos-raylib | `dbc56a8` (6.0 tag, pinned in versions.lock) |
 | playos-tools | `ce8f1e9` sdk: implement the emulator profile (S15-T7) |
 | others | unchanged (docs/cloud) |
