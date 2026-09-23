@@ -389,3 +389,37 @@ run - only on the device:
   user was not looking at, so a complete, successful install looked like nothing
   happened. When you replace a mechanism, grep for what the *old* mechanism was
   responsible for, not just the call you removed.
+
+## Emulator / headless QEMU (S15-T7)
+
+- **"The compositor is running" is not "the session can accept a game."**
+  Autostart fired as soon as `compositor_state == COMPOSITOR_RUNNING`, but the
+  compositor's *control connection* and the shell's `ShellReady` listener register
+  a fraction of a second later. `SetExpectedGame` was dropped
+  (`no compositor connection; cannot send SetExpectedGame`) and `GameStarted` had
+  nowhere to go, so the game ran and rendered raylib into a surface the compositor
+  never classified (`playos-compositor: unclaimed surface`) and `fps ... game=0`.
+  Gate any programmatic launch on `compositor_conn_fd >= 0 && shell_listener_fd >= 0`.
+- **The guest's log files are empty in a killed-QEMU disk image.** QEMU is stopped
+  with SIGTERM, so `/data/log/*` inodes still show size 0: the writes (and the
+  init.log fd) are in the ext4 journal. Replay it on a *copy* first
+  (`cp` + `e2fsck -fy`, then `debugfs -R "cat /log/..."`). `debugfs` also pads
+  its output with NULs, which makes `grep` call the file binary — `tr -d '\0'`
+  or `grep -a`.
+- **Don't give QEMU two GPUs and expect the compositor to pick the good one.**
+  With the default VGA plus `-device virtio-gpu-pci`, wlroots selected
+  `card1` (bochs-drm) and every atomic commit failed
+  (`connector Virtual-2: Atomic commit failed: Out of memory`) while `fps shell=N`
+  kept counting composited frames. `-vga none` + virtio-gpu removed the errors.
+- **QEMU's kernel had no evdev at all.** `board/qemu-x86_64/linux.config` had
+  `INPUT_KEYBOARD`/`ATKBD` but `# CONFIG_INPUT_EVDEV is not set`, so the guest
+  exposed no `/dev/input/event*` and a game could never receive input. Enable
+  `INPUT_EVDEV` (and `VIRTIO_INPUT` for `virtio-keyboard` / `-object input-linux`
+  pass-through) — the game's input backend then finds the devices and honestly
+  reports "no controller" for a keyboard rather than silently reading nothing.
+- **The game's own stderr is the best render probe.** raylib logs
+  `Platform backend: PLAYOS (Wayland + EGL/GLES2)` and
+  `DISPLAY: Device initialized successfully`; if the compositor log then shows
+  `game surface added to scene (role 3)` + `game=N`, the device artifact really
+  rendered. A blank compositor log with those lines present means a policy/role
+  problem, not a graphics problem.

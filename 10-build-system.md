@@ -57,6 +57,12 @@ make ally-flash             print the dd/flash command
 # Intel PC
 make intel-build / intel-dev-usb-image / intel-flash
 
+# SDK emulator (S15-T7): minimal image that boots a device (musl) build
+make emulator-build         Buildroot build → output/emulator
+make emulator-run           install a game on a playos-data disk and boot it
+                            (ARGS='--game-dir DIR --game-id ID'; also
+                            --display sdl, --gamepad /dev/input/eventN)
+
 # Updates
 make update-bundle          dev-signed .playosb from output/ally/images/rootfs.squashfs
 
@@ -83,6 +89,7 @@ Every `*-build` target runs three Buildroot invocations:
 | `playos_ally_defconfig` | `output/ally` | ROG Ally **dev** image (amdgpu, BusyBox+Dropbear+evtest, embedded initramfs) |
 | `playos_ally_production_defconfig` | `output/ally-production` | ROG Ally **production** (Sprint 12: no BusyBox/Dropbear/evtest, post-build lint) |
 | `playos_intel_pc_defconfig` | `output/intel` | Intel PC (S13: i915 + Mesa iris, HDA; NVIDIA dGPU ignored) |
+| `playos_emulator_defconfig` | `output/emulator` | SDK emulator (S15-T7): minimal session (no BusyBox/SSH/installer/recovery/samples); a device game arrives on the `playos-data` disk and init launches it with `playos.autostart=<game-id>` |
 
 (The separate `playos_ally_installer_defconfig` / `playos_installer_qemu_defconfig`
 and the `output/installer` target are gone — S13.7 consolidated the installer into

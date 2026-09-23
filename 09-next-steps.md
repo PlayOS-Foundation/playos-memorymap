@@ -5,31 +5,29 @@
 ## Where we are
 
 Sprints 0–14 and 14.5 are complete and validated on-device (14.5 has two parked
-verification checks, below). **Sprint 15 (Game Developer SDK) is in progress:**
-T1–T6 are `done` and verified (toolchain, `libplayos`, `libraylib`,
-CMake/pkg-config, desktop shim, desktop profile); **T7 (emulator profile) and
-T8 (reference-sample validation) are not started.** See
-[`05-sprint-status.md`](05-sprint-status.md) for head SHAs and evidence, and
-`playos-spec/src/sprints/Sprint-15.md` for the task grid.
+verification checks, below). **Sprint 15 (Game Developer SDK):** T1–T7 are `done`
+and verified (toolchain, `libplayos`, `libraylib`, CMake/pkg-config, desktop
+shim, desktop profile, and the QEMU emulator profile); **T8 (reference-sample
+validation) is not started.** See [`05-sprint-status.md`](05-sprint-status.md) for
+head SHAs and evidence, and `playos-spec/src/sprints/Sprint-15.md` for the grid.
 
 ## Next up: Sprint 15 (Game Developer SDK)
 
-**Sprint 14.5** (Shell-Owned Install Progress) is done — one `libplayos-install`
-engine, a screen-less supervised `playos-install-worker`, and
-`PrepareInstall`/`InstallProgress` over the trusted socket — with two
-verification checks parked (below). **Sprint 15** is now the active work: the
-self-contained `playos-sdk` already ships the musl toolchain,
-`libplayos`/`libraylib`, CMake/pkg-config, and the `device` + `desktop`
-profiles (T1–T6). What remains is **T7** (`scripts/build-emulator.sh` runs the
-`device` artifact in the PlayOS QEMU/container image; a
-`playos_emulator_defconfig` provides the boot image) and **T8** (build a
-reference sample entirely through the SDK and record per-profile results).
-`export-sdk.sh` is in `playos-refdistro`; the profile scripts and `docs/sdk.md`
-are in `playos-tools`.
+T7 is done: the SDK's `build-emulator.sh` builds the `device` (musl) profile,
+stages it on a `playos-data` disk, and boots the minimal
+`playos_emulator_defconfig` image with `playos.autostart=<game-id>` — init
+launches it through the same path as the shell's LaunchGame, and the compositor
+renders it (measured: `game surface added to scene (role 3)`, `fps shell=0
+game=1`). Design + evidence: `playos-spec/src/sdk-emulator-profile.md`.
 
-Current pins (`versions.lock`, 2026-09-22): init `1518021`, compositor `45cbeb0`,
-shell `f32727f`, spec `4e8dbf5`, samples `651ed31`, runtime `4b6426a`,
-platform-api `f3e629c`. Spec/platform-api/shell lag their repo HEADs because the
+What remains is **T8**: build a reference sample entirely through the SDK in
+`playos-samples/sdk-reference/` and validate `device`, `desktop`, and
+`emulator` end to end, recording the per-profile results. `export-sdk.sh` is in
+`playos-refdistro`; the profile scripts and `docs/sdk.md` are in `playos-tools`.
+
+Current pins (`versions.lock`, 2026-09-22): init `4f9c599`, compositor `45cbeb0`,
+shell `f32727f`, spec `67f88de`, samples `651ed31`, runtime `4b6426a`,
+platform-api `f3e629c`. platform-api/shell lag their repo HEADs because those
 S15 commits are host/SDK-side; re-check before a release.
 
 ## Sprint 14 residuals (documented, not tasks)
