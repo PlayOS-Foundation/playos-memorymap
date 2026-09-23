@@ -11,10 +11,10 @@
 | playos-init | `4f9c599` init: playos.autostart kernel token for the emulator (S15-T7) |
 | playos-compositor | `45cbeb0` compositor: report direct scanout (S14 P3) |
 | playos-runtime | `4b6426a` trusted: StartInstaller carries the payload device (S14.5) |
-| playos-refdistro | `9e22239` versions.lock: bump spec to 2a152b3 (S16 MT7922 firmware) |
+| playos-refdistro | `e8c5ab0` refdistro: ship the Invaders sample; KVM-aware emulator runner |
 | playos-platform-api | `231e4a5` platform-api: desktop shim test — mapping + storage root (S15-T5) |
 | playos-shell | `3f25a53` shell: stop leaving the installer screen when the install starts (S14.5) |
-| playos-samples | `3d98516` sdk-reference: reference sample built entirely via the SDK (S15-T8) |
+| playos-samples | `586784d` invaders: arcade-shooter sample built with the SDK |
 | playos-raylib | `dbc56a8` (6.0 tag, pinned in versions.lock) |
 | playos-tools | `ce8f1e9` sdk: implement the emulator profile (S15-T7) |
 | others | unchanged (docs/cloud) |
@@ -374,6 +374,18 @@ QEMU emulator (`emulator`). `scripts/export-sdk.sh` (refdistro) populates
   (no `DISPLAY`/`WAYLAND_DISPLAY` in the session); its repro and required
   evidence are in `playos-spec/src/sprints/Sprint-15.md` → Parked verification.
   Results: the sample's `README.md`.
+
+  A second, fuller sample followed: **`playos-samples/invaders/`** (`586784d`) —
+  a complete single-screen arcade shooter (marching fleet, shields, bombs,
+  lives, levels, persisted high score) using only the public API + raylib. Built
+  musl (device) and glibc (desktop) through the SDK; the emulator run launches it
+  and the compositor claims `game surface added to scene (role 3)`. It **ships in
+  the image**: `playos-samples.mk` installs it to
+  `/usr/share/playos/games/com.playos.sample-invaders` (verified with
+  `make playos-samples`), and the samples pin is bumped. Its emulator run could
+  not produce the `game=N` commit-rate sample because this host has no readable
+  `/dev/kvm` (TCG fallback); `emulator-run.sh` now extends the timeout and warns
+  in that case.
 
 Caveats: the desktop raylib is X11-only unless `libdecor-0-dev` is present
 (`export-sdk.sh` reports this; before this session's fix it *aborted* at the

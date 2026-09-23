@@ -32,7 +32,7 @@ half of T8.
 - S14.5's two installer checks and the S14 residuals are listed below.
 
 Current pins (`versions.lock`, 2026-09-22): init `4f9c599`, compositor `45cbeb0`,
-shell `f32727f`, spec `2a152b3`, samples `3d98516`, runtime `4b6426a`,
+shell `f32727f`, spec `2a152b3`, samples `586784d`, runtime `4b6426a`,
 platform-api `f3e629c`. platform-api/shell lag their repo HEADs because those
 S15 commits are host/SDK-side; re-check before a release.
 
