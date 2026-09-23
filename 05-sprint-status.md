@@ -14,7 +14,7 @@
 | playos-refdistro | `e8c5ab0` refdistro: ship the Invaders sample; KVM-aware emulator runner |
 | playos-platform-api | `231e4a5` platform-api: desktop shim test — mapping + storage root (S15-T5) |
 | playos-shell | `3f25a53` shell: stop leaving the installer screen when the install starts (S14.5) |
-| playos-samples | `586784d` invaders: arcade-shooter sample built with the SDK |
+| playos-samples | `1f90356` invaders: frame-pacing knob + hitch instrumentation |
 | playos-raylib | `dbc56a8` (6.0 tag, pinned in versions.lock) |
 | playos-tools | `ce8f1e9` sdk: implement the emulator profile (S15-T7) |
 | others | unchanged (docs/cloud) |
@@ -386,6 +386,20 @@ QEMU emulator (`emulator`). `scripts/export-sdk.sh` (refdistro) populates
   not produce the `game=N` commit-rate sample because this host has no readable
   `/dev/kvm` (TCG fallback); `emulator-run.sh` now extends the timeout and warns
   in that case.
+
+  **Open issue (reported on hardware, 2026-09-22):** the game is smooth but
+  hitches heavily every few seconds on the Ally. Diagnosis so far: the PlayOS
+  raylib backend renders unthrottled — `SwapScreenBuffer()` calls
+  `eglSwapInterval(0)` and never waits on `wl_surface_frame` — so a game's only
+  pacing is raylib's `WaitTime`-based `SetTargetFPS`, and a sleep-capped 60 fps
+  client is not phase-locked to the compositor's vsync (missed presents →
+  periodic hitch). The sample now ships an on-screen `FPS / cap / worst ms`
+  readout, a **SELECT / F1** cap cycle (`60 → 120 → off → 30`), and a `pacing:`
+  hitch log so the loop-vs-presentation question can be settled on-device. The
+  likely real fix is in `playos-shell/external/raylib` (the vendored raylib that
+  the `playos-raylib` package promotes): honour `FLAG_VSYNC_HINT` /
+  `eglSwapInterval(1)` / `wl_surface_frame`, then bump the shell pin and rebuild
+  raylib + SDK + image.
 
 Caveats: the desktop raylib is X11-only unless `libdecor-0-dev` is present
 (`export-sdk.sh` reports this; before this session's fix it *aborted* at the
