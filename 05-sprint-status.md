@@ -1,20 +1,20 @@
 # 05 — Sprint Status
 
-> **Last updated: 2026-09-22** — Sprints 11.5, 11.6, 12, 13, 13.6, 13.7, 14, and 14.5 are closed (validated on-device; 14.5 has two parked verification checks, below). **Sprint 15 (Game Developer SDK):** T1–T7 done and verified; T8 (reference-sample validation) not started.
+> **Last updated: 2026-09-22** — Sprints 11.5, 11.6, 12, 13, 13.6, 13.7, 14, and 14.5 are closed (validated on-device; 14.5 has two parked verification checks, below). **Sprint 15 (Game Developer SDK):** T1–T7 done and verified; T8 (reference-sample validation) in progress (device + emulator validated; the desktop windowed run needs a display).
 > Specs live in `playos-spec/src/sprints/`; this file summarizes state and evidence. Head SHAs are as of 2026-09-22.
 
 ## Head SHAs (all repos clean on `main`)
 
 | Repo | HEAD |
 |---|---|
-| playos-spec | `67f88de` spec: S15-T7 emulator profile done and verified |
+| playos-spec | `0bf38b8` spec: S15-T8 reference sample (in progress) |
 | playos-init | `4f9c599` init: playos.autostart kernel token for the emulator (S15-T7) |
 | playos-compositor | `45cbeb0` compositor: report direct scanout (S14 P3) |
 | playos-runtime | `4b6426a` trusted: StartInstaller carries the payload device (S14.5) |
-| playos-refdistro | `278aa6c` refdistro: emulator profile image + runner (S15-T7) |
+| playos-refdistro | `515285c` versions.lock: bump spec to 0bf38b8 (S15-T8) |
 | playos-platform-api | `231e4a5` platform-api: desktop shim test — mapping + storage root (S15-T5) |
 | playos-shell | `3f25a53` shell: stop leaving the installer screen when the install starts (S14.5) |
-| playos-samples | `651ed31` samples: no B-quit — platform owns game exit (S14) |
+| playos-samples | `3d98516` sdk-reference: reference sample built entirely via the SDK (S15-T8) |
 | playos-raylib | `dbc56a8` (6.0 tag, pinned in versions.lock) |
 | playos-tools | `ce8f1e9` sdk: implement the emulator profile (S15-T7) |
 | others | unchanged (docs/cloud) |
@@ -364,10 +364,19 @@ QEMU emulator (`emulator`). `scripts/export-sdk.sh` (refdistro) populates
   QEMU image, is launched by init under the S12 sandbox, and the compositor
   logs `game surface added to scene (role 3)` + `fps shell=0 game=1`. Design +
   measured evidence: `playos-spec/src/sdk-emulator-profile.md`.
-- **T8** reference sample across all profiles — *not started*
+- **T8** reference sample across all profiles — in progress.
+  `playos-samples/sdk-reference/` (`3d98516`) is one `main.c` built entirely
+  through the SDK for all three profiles, exercising system/lifecycle/input/
+  storage/logging over an animated raylib scene. `device` builds musl;
+  `desktop` builds glibc; the `emulator` run passes end to end (same evidence
+  shape as T7, with the sample's own `sdk-reference 1.0.0 starting` /
+  `saves at /data/saves/...` lines). The desktop **windowed run** is the only
+  unmet check — this session had no `DISPLAY`/`WAYLAND_DISPLAY`. Results:
+  the sample's `README.md`.
 
 Caveats: the desktop raylib is X11-only unless `libdecor-0-dev` is present
-(`export-sdk.sh` now detects and reports this). `versions.lock` was bumped for
-`init` (`4f9c599`) and `spec` (`67f88de`) with T7; `platform-api` (`f3e629c`)
-and `shell` (`f32727f`) still lag their repo HEADs because those S15 commits are
-host/SDK-side.
+(`export-sdk.sh` reports this; before this session's fix it *aborted* at the
+`grep -c` instead, leaving the desktop libplayos unexported). `versions.lock`
+was bumped for `init` (`4f9c599`) and `spec` (`0bf38b8`); `platform-api`
+(`f3e629c`) and `shell` (`f32727f`) still lag their repo HEADs because those S15
+commits are host/SDK-side.
