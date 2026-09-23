@@ -14,7 +14,7 @@
 | playos-refdistro | `e8c5ab0` refdistro: ship the Invaders sample; KVM-aware emulator runner |
 | playos-platform-api | `231e4a5` platform-api: desktop shim test — mapping + storage root (S15-T5) |
 | playos-shell | `3f25a53` shell: stop leaving the installer screen when the install starts (S14.5) |
-| playos-samples | `4e61388` invaders: never skip EndDrawing while backgrounded |
+| playos-samples | `443128f` invaders: quiet sample (diagnostics stripped; EndDrawing fix kept) |
 | playos-raylib | `dbc56a8` (6.0 tag, pinned in versions.lock) |
 | playos-tools | `ce8f1e9` sdk: implement the emulator profile (S15-T7) |
 | others | unchanged (docs/cloud) |
@@ -398,14 +398,31 @@ QEMU emulator (`emulator`). `scripts/export-sdk.sh` (refdistro) populates
   `paused` and always drawing + `EndDrawing()`. Written up in the sample README
   ("never skip EndDrawing()").
 
-  **Still open (smaller):** the compositor presents the fullscreen game surface
-  with 100 % zero-copy direct scanout at a **~100 ↔ ~30 per-second alternation**
-  (~65 fps average) while the game loops steadily at ~100-120 fps, so the client
-  blocks on buffer release (`eglSwapBuffers`) 1-2×/s. A 15 s scheduling probe on
-  the Ally found no stalls > 10 ms (worst 3.1 ms), `dmesg` was clean and 1 Hz
-  writes+fsync to `/data/log` were fast — so this sits in the compositor's
-  present path, not the system. Also observed: the shell spins at ~6 % CPU while
-  a game is foreground. Deserves a `playos-compositor` pass.
+  **Root cause of the periodic stutter — measured, kernel-stack evidence
+  (2026-09-22):** `playos-platform-api`'s evdev backend re-scans
+  `/dev/input/event0-31` whenever a device class is missing. The Ally has no
+  BTN_MODE "home" node, so `open_home_node()` re-runs every
+  `RESCAN_INTERVAL_US` = 2 s; each scan **opens and closes up to 32 evdev
+  nodes**, and evdev `close()` runs `input_close_device()` → `synchronize_rcu()`:
+
+  ```
+  __wait_rcu_gp ← synchronize_rcu_normal ← input_close_device ← evdev_release ← __fput ← close(2)
+  ```
+
+  ~30 ms per close × ~12 nodes ≈ **a ~0.4 s stall every 2 s, inside the client**.
+  That one bug explains the whole symptom set: the user-visible "hitch every few
+  seconds", the compositor's `100 ↔ 30` presents/s alternation (the client
+  commits nothing during the stall) and the shell's ~6 % CPU.
+
+  **Not a compositor bug:** the compositor is single-threaded and idle in
+  `do_sys_poll` (CPU time does not move); a 15 s scheduling probe found no stalls
+  > 10 ms (worst 3.1 ms); `dmesg` is clean; 1 Hz writes+fsync to `/data/log` are
+  fast. Present path is 100 % zero-copy direct scanout, as designed.
+
+  **Fix belongs in `playos-platform-api` (input backend):** enumerate input
+  devices via sysfs (`/sys/class/input/event*/device/name` + `capabilities/*`)
+  and open **only** the matching node, so a scan never opens+closes 32 evdev
+  nodes; and back the missing-node rescan off well beyond 2 s. Not yet done.
 
 Caveats: the desktop raylib is X11-only unless `libdecor-0-dev` is present
 (`export-sdk.sh` reports this; before this session's fix it *aborted* at the
