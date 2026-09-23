@@ -32,9 +32,14 @@ half of T8.
 - S14.5's two installer checks and the S14 residuals are listed below.
 
 Current pins (`versions.lock`, 2026-09-22): init `4f9c599`, compositor `45cbeb0`,
-shell `f32727f`, spec `cade621`, samples `3d98516`, runtime `4b6426a`,
+shell `f32727f`, spec `2a152b3`, samples `3d98516`, runtime `4b6426a`,
 platform-api `f3e629c`. platform-api/shell lag their repo HEADs because those
 S15 commits are host/SDK-side; re-check before a release.
+
+S16 firmware note: the Ally's **internal** Wi-Fi is the AMD RZ616 = **MediaTek
+MT7922** (`mt7921e`, PCI `14c3:0616`), so T1 enables
+`BR2_PACKAGE_LINUX_FIRMWARE_MEDIATEK_MT7922` only; `_MT7921` is a sibling chip and
+`_MT7922_BT` is Bluetooth-only (out of scope).
 
 ## Sprint 14 residuals (documented, not tasks)
 

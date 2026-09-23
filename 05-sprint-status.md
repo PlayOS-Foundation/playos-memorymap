@@ -7,11 +7,11 @@
 
 | Repo | HEAD |
 |---|---|
-| playos-spec | `cade621` spec: park S15's desktop-window check; realign Sprint 16 (+ ADR-0012) |
+| playos-spec | `2a152b3` spec: pin S16 Wi-Fi firmware to the Ally's MT7922 (internal RZ616) |
 | playos-init | `4f9c599` init: playos.autostart kernel token for the emulator (S15-T7) |
 | playos-compositor | `45cbeb0` compositor: report direct scanout (S14 P3) |
 | playos-runtime | `4b6426a` trusted: StartInstaller carries the payload device (S14.5) |
-| playos-refdistro | `f979bee` versions.lock: bump spec to cade621 (S15 parked + Sprint 16 realignment) |
+| playos-refdistro | `9e22239` versions.lock: bump spec to 2a152b3 (S16 MT7922 firmware) |
 | playos-platform-api | `231e4a5` platform-api: desktop shim test — mapping + storage root (S15-T5) |
 | playos-shell | `3f25a53` shell: stop leaving the installer screen when the install starts (S14.5) |
 | playos-samples | `3d98516` sdk-reference: reference sample built entirely via the SDK (S15-T8) |
