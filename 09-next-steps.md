@@ -4,33 +4,35 @@
 
 ## Where we are
 
-Sprints 0–14 and 14.5 are complete and validated on-device (14.5 has two parked
-verification checks, below). **Sprint 15 (Game Developer SDK):** T1–T7 are `done`
-and verified (toolchain, `libplayos`, `libraylib`, CMake/pkg-config, desktop
-shim, desktop profile, and the QEMU emulator profile). **T8 (reference-sample
-validation) is in progress** — `playos-samples/sdk-reference/` builds for
-`device` (musl) and `desktop` (glibc) through the SDK and passes the `emulator`
-run; only the desktop **windowed** run is unmet (no display in the session that
-did the work). See [`05-sprint-status.md`](05-sprint-status.md) for head SHAs and
-evidence, and `playos-spec/src/sprints/Sprint-15.md` for the grid.
+Sprints 0–15 are complete and verified (14.5 has two parked verification checks;
+15 has one — the desktop windowed run). Sprint 15's SDK ships the musl toolchain,
+`libplayos`/`libraylib`, CMake/pkg-config, the `desktop` shim/profile, the QEMU
+`emulator` profile, and the `sdk-reference` sample validated on `device` +
+`emulator`. See [`05-sprint-status.md`](05-sprint-status.md) for head SHAs and
+evidence.
 
-## Next up: Sprint 15 (Game Developer SDK)
+## Next up: Sprint 16 — `playos-net` (Wi-Fi)
 
-T7 is done: the SDK's `build-emulator.sh` builds the `device` (musl) profile,
-stages it on a `playos-data` disk, and boots the minimal
-`playos_emulator_defconfig` image with `playos.autostart=<game-id>` — init
-launches it through the same path as the shell's LaunchGame, and the compositor
-renders it (measured: `game surface added to scene (role 3)`, `fps shell=0
-game=1`). Design + evidence: `playos-spec/src/sdk-emulator-profile.md`.
+Sprint 16 is **reviewed and realigned but not started** (2026-09-22). It brings
+Wi-Fi up with a D-Bus-free stack — `wpa_supplicant` + `dhcpcd` + a trusted
+`playos-net` bridge — over the existing `control.sock`. Read
+`playos-spec/src/sprints/Sprint-16.md` (its Realignment notes table lists every
+correction) and `playos-spec/src/adr/ADR-0012-wifi-stack.md` before starting.
+Ground truth: `board/ally/linux.config` has `# CONFIG_WIRELESS is not set` (T1 is
+real work); `dhcpcd` is already enabled; there is no `playos-net` repo yet (start
+it in `playos-refdistro/src/playos-net/`). T8's on-device Wi-Fi checks are
+**hardware-gated** on the Ally's MT7921e; host/QEMU covers T1–T7 and the QEMU
+half of T8.
 
-T8's reference sample exists and its `README.md` records the results. To finish
-it, run the desktop profile on a machine with a display:
-`sdk/scripts/build-desktop.sh playos-samples/sdk-reference`, then run
-`build-desktop/bin/game` in a window (install `libdecor-0-dev` first if the
-desktop raylib built X11-only and the host is Wayland).
+### Parked checks to pick up when hardware/display allows
+
+- **S15 desktop windowed run** — `sdk/scripts/build-desktop.sh
+  playos-samples/sdk-reference`, then run `build-desktop/bin/game` in a window
+  (full repro and required evidence in `Sprint-15.md` → Parked verification).
+- S14.5's two installer checks and the S14 residuals are listed below.
 
 Current pins (`versions.lock`, 2026-09-22): init `4f9c599`, compositor `45cbeb0`,
-shell `f32727f`, spec `0bf38b8`, samples `3d98516`, runtime `4b6426a`,
+shell `f32727f`, spec `cade621`, samples `3d98516`, runtime `4b6426a`,
 platform-api `f3e629c`. platform-api/shell lag their repo HEADs because those
 S15 commits are host/SDK-side; re-check before a release.
 

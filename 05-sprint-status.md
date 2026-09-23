@@ -1,17 +1,17 @@
 # 05 — Sprint Status
 
-> **Last updated: 2026-09-22** — Sprints 11.5, 11.6, 12, 13, 13.6, 13.7, 14, and 14.5 are closed (validated on-device; 14.5 has two parked verification checks, below). **Sprint 15 (Game Developer SDK):** T1–T7 done and verified; T8 (reference-sample validation) in progress (device + emulator validated; the desktop windowed run needs a display).
+> **Last updated: 2026-09-22** — Sprints 11.5, 11.6, 12, 13, 13.6, 13.7, 14, and 14.5 are closed (validated on-device; 14.5 has two parked verification checks). **Sprint 15 (Game Developer SDK): done** — T1–T7 verified; T8 verified for `device` + `emulator` with one parked check (the desktop windowed run, no display in the session). **Sprint 16 (`playos-net`/Wi-Fi): not started — reviewed and realigned 2026-09-22** (ADR-0012; on-device acceptance is hardware-gated).
 > Specs live in `playos-spec/src/sprints/`; this file summarizes state and evidence. Head SHAs are as of 2026-09-22.
 
 ## Head SHAs (all repos clean on `main`)
 
 | Repo | HEAD |
 |---|---|
-| playos-spec | `0bf38b8` spec: S15-T8 reference sample (in progress) |
+| playos-spec | `cade621` spec: park S15's desktop-window check; realign Sprint 16 (+ ADR-0012) |
 | playos-init | `4f9c599` init: playos.autostart kernel token for the emulator (S15-T7) |
 | playos-compositor | `45cbeb0` compositor: report direct scanout (S14 P3) |
 | playos-runtime | `4b6426a` trusted: StartInstaller carries the payload device (S14.5) |
-| playos-refdistro | `515285c` versions.lock: bump spec to 0bf38b8 (S15-T8) |
+| playos-refdistro | `f979bee` versions.lock: bump spec to cade621 (S15 parked + Sprint 16 realignment) |
 | playos-platform-api | `231e4a5` platform-api: desktop shim test — mapping + storage root (S15-T5) |
 | playos-shell | `3f25a53` shell: stop leaving the installer screen when the install starts (S14.5) |
 | playos-samples | `3d98516` sdk-reference: reference sample built entirely via the SDK (S15-T8) |
@@ -364,19 +364,37 @@ QEMU emulator (`emulator`). `scripts/export-sdk.sh` (refdistro) populates
   QEMU image, is launched by init under the S12 sandbox, and the compositor
   logs `game surface added to scene (role 3)` + `fps shell=0 game=1`. Design +
   measured evidence: `playos-spec/src/sdk-emulator-profile.md`.
-- **T8** reference sample across all profiles — in progress.
+- **T8** reference sample across all profiles — done (1 parked check).
   `playos-samples/sdk-reference/` (`3d98516`) is one `main.c` built entirely
   through the SDK for all three profiles, exercising system/lifecycle/input/
   storage/logging over an animated raylib scene. `device` builds musl;
   `desktop` builds glibc; the `emulator` run passes end to end (same evidence
   shape as T7, with the sample's own `sdk-reference 1.0.0 starting` /
-  `saves at /data/saves/...` lines). The desktop **windowed run** is the only
-  unmet check — this session had no `DISPLAY`/`WAYLAND_DISPLAY`. Results:
-  the sample's `README.md`.
+  `saves at /data/saves/...` lines). The desktop **windowed run** is parked
+  (no `DISPLAY`/`WAYLAND_DISPLAY` in the session); its repro and required
+  evidence are in `playos-spec/src/sprints/Sprint-15.md` → Parked verification.
+  Results: the sample's `README.md`.
 
 Caveats: the desktop raylib is X11-only unless `libdecor-0-dev` is present
 (`export-sdk.sh` reports this; before this session's fix it *aborted* at the
 `grep -c` instead, leaving the desktop libplayos unexported). `versions.lock`
-was bumped for `init` (`4f9c599`) and `spec` (`0bf38b8`); `platform-api`
+was bumped for `init` (`4f9c599`) and `spec` (`cade621`); `platform-api`
 (`f3e629c`) and `shell` (`f32727f`) still lag their repo HEADs because those S15
 commits are host/SDK-side.
+
+## Sprint 16 (`playos-net`) — next, reviewed and realigned (not started)
+
+Wi-Fi with a D-Bus-free stack: `wpa_supplicant` + `dhcpcd` + a new trusted
+`playos-net` bridge over the existing `control.sock`. **No implementation has
+started.** The 2026-09-22 review corrected the sprint against the tree:
+`playos_ally_defconfig` (not `playos_rog_ally_defconfig`); firmware from
+`BR2_PACKAGE_LINUX_FIRMWARE_MEDIATEK_MT7921`/`_MT7922` (no overlay blobs);
+wpa_supplicant via Buildroot options with `_DBUS` left unset; `dhcpcd` already
+enabled; runtime IPC in `playos-init/ipc/ipc.h` + `runtime-ipc.md` (not
+`protocols/`, which is the Wayland protocol); shell extends Settings
+`TAB_NETWORK` + `src/screen_network.c`. The stack decision is **ADR-0012**
+(`playos-spec/src/adr/ADR-0012-wifi-stack.md`). Ground truth: `board/ally/linux.config`
+has `# CONFIG_WIRELESS is not set` (T1 is real work); no `playos-net` repo exists
+(start it in `playos-refdistro/src/playos-net/`). T8's on-device Wi-Fi checks are
+**hardware-gated** on the Ally's MT7921e; host/QEMU covers T1–T7 and the QEMU
+half of T8.
