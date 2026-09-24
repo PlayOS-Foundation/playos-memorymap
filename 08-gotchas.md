@@ -454,3 +454,21 @@ run - only on the device:
   `game surface added to scene (role 3)` + `game=N`, the device artifact really
   rendered. A blank compositor log with those lines present means a policy/role
   problem, not a graphics problem.
+
+## `playos_trusted_*` return 0 on success — they are not length-returning
+
+`libplayos-trusted` follows `playos_trusted_query_status()`: **0 = success**,
+with the reply JSON copied (NUL-terminated) into the caller's buffer; **-1 =
+error**. Reading the return value as a byte count silently discards every
+successful reply. This cost a full debug cycle on the shell's Wi-Fi scan: the
+relay, the bridge and wpa_supplicant were all fine, and the UI still said "scan
+failed" because `rc == 0` was tested as `> 0`.
+
+Two habits that stop this class of bug:
+
+- when a request wrapper's contract is not obvious, print it from a **standalone
+  probe** that reproduces the caller's exact shape (here: fork + request in the
+  child + pipe) before changing application code;
+- have the helper report the raw return value into the caller's log, so a
+  failure is diagnosable from `shell-stderr.log` rather than only from a message
+  on screen.
