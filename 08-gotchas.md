@@ -321,20 +321,23 @@
   `defaults.pcm.card 1` / `defaults.ctl.card 1`. Games need `/dev/snd` in the
   Landlock allowlist and `playos-game` in the `audio` group or audio breaks.
 - Shell retries audio init until card 1 registers late (`31bc6ed`).
-- **One PCM owner at a time — and the shell currently never lets go.** The shell
-  opens the default playback PCM at startup and keeps it:
-  `/proc/<shell>/fd/25 -> /dev/snd/pcmC1D0p` with
-  `card1/pcm0p/sub0/status: state: RUNNING`. A game that then calls
-  `InitAudioDevice()` fails with
+- **One PCM owner at a time — check who holds `pcmC1D0p` before debugging game
+  audio.** The shell opens the default playback PCM for its UI tones; if it keeps
+  it while a game runs, the game's `InitAudioDevice()` fails with
   `ALSA lib pcm_dmix.c:1000:(snd_pcm_dmix_open) [error.pcm] unable to open slave`
-  → `WARNING: AUDIO: Failed to initialize playback device`, and the game runs
-  silent (Invaders logs `[audio] no audio device — running silent`). It is
-  **intermittent**: in an earlier boot the shell's own audio init had failed
-  (`snd_mixer_attach(default) failed` in the overlay log), the PCM was free, and
-  the same game logged `procedural SFX ready` and played fine. Per ADR-0007 the
-  shell must release the PCM when a game goes foreground and re-acquire on exit.
-  So when debugging "no game audio", check **who holds `pcmC1D0p`** first — the
-  game logging nothing is a symptom, not the cause.
+  → `WARNING: AUDIO: Failed to initialize playback device` → silent game (Invaders
+  logs `[audio] no audio device — running silent`). It looked **intermittent**
+  (an earlier boot where the shell's own audio init had failed left the PCM free
+  and the game played fine), which is what makes it worth stating plainly: the
+  game logging nothing is a *symptom*. Read
+  `grep -E '^(state|owner_pid)' /proc/asound/card1/pcm0p/sub0/status` and
+  `ls -l /proc/<pid>/fd | grep snd`.
+  **Fixed in `playos-shell` `c055e26`** (ADR-0007): `GAME_STARTED` unloads the
+  tones and calls `CloseAudioDevice()`; `GAME_EXITED`/`GAME_CRASHED` let the
+  per-frame bootstrap re-init and rebuild them. Verified on the Ally by launching
+  via `control.sock`: PCM owner 637 (shell) → 669 (game, `procedural SFX ready`)
+  → 637 (shell, `audio device ready`). Volume keys still work in-game because
+  they use the *mixer* (`controlC1`), which the game does not hold.
 
 ## Security / sandbox (Sprint 12)
 
