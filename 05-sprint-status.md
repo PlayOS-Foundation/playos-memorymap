@@ -494,3 +494,28 @@ does not exist.
 Next: **T5** supervise + relay (`control.sock` → bridge, so the shell never
 connects directly), **T6** the settings screen, **T7** is half-done (profiles
 persist and auto-connect inside `playos-net`), **T8** E2E on hardware.
+
+### Sprint 16 — image built with everything (2026-09-24)
+
+`make ally-dev-usb-image` produced a 3.3 GB dev image carrying every fix from
+this session, content-verified inside the shipped `rootfs.squashfs`:
+
+- `init` — T5 supervision + control-plane relay (`network stack started`,
+  `wpa_supplicant/dhcpcd/playos-net launched`)
+- `usr/bin/playos-net` — the Wi-Fi bridge
+- `usr/lib/libplayos.so.0` — the evdev discovery fix (permanent, no bind-mount)
+- `usr/bin/playos-shell` — the ADR-0007 audio handoff
+- `usr/sbin/wpa_supplicant` + MT7922 firmware + regdb
+- the Invaders sample with procedural SFX
+
+**Lesson:** a bind-mount can never activate a new `/init`. `/` is read-only
+squashfs, so `mount --bind` over `/init` is lost at reboot and the old PID 1
+boots. Testing a change to init *requires* a new image (or editing the EFI boot
+entry's cmdline). Everything else in this list could be bind-mounted for a live
+test; init cannot.
+
+**Still outstanding:** T6's screen (`src/screen_network.c` — scan list, passphrase
+entry, live status) and its `TAB_NETWORK` wiring. The T6 client helpers
+(`playos_trusted_*_network*`) are implemented and build clean; only the UI
+remains. T8 (connect → DHCP → WPA3 E2E, trust boundary, reboot persistence)
+follows once the image is installed.
