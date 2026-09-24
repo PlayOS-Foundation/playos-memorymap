@@ -321,6 +321,20 @@
   `defaults.pcm.card 1` / `defaults.ctl.card 1`. Games need `/dev/snd` in the
   Landlock allowlist and `playos-game` in the `audio` group or audio breaks.
 - Shell retries audio init until card 1 registers late (`31bc6ed`).
+- **One PCM owner at a time — and the shell currently never lets go.** The shell
+  opens the default playback PCM at startup and keeps it:
+  `/proc/<shell>/fd/25 -> /dev/snd/pcmC1D0p` with
+  `card1/pcm0p/sub0/status: state: RUNNING`. A game that then calls
+  `InitAudioDevice()` fails with
+  `ALSA lib pcm_dmix.c:1000:(snd_pcm_dmix_open) [error.pcm] unable to open slave`
+  → `WARNING: AUDIO: Failed to initialize playback device`, and the game runs
+  silent (Invaders logs `[audio] no audio device — running silent`). It is
+  **intermittent**: in an earlier boot the shell's own audio init had failed
+  (`snd_mixer_attach(default) failed` in the overlay log), the PCM was free, and
+  the same game logged `procedural SFX ready` and played fine. Per ADR-0007 the
+  shell must release the PCM when a game goes foreground and re-acquire on exit.
+  So when debugging "no game audio", check **who holds `pcmC1D0p`** first — the
+  game logging nothing is a symptom, not the cause.
 
 ## Security / sandbox (Sprint 12)
 
