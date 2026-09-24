@@ -189,6 +189,20 @@
   `<pkg>-rebuild` for **each** O= output you care about, then verify the binary
   inside the produced image (`mount -o loop,ro images/rootfs.squashfs` + hash
   against `target/`) *before* bundling or flashing.
+- **Adding a `linux-firmware` option needs `-rebuild`, not `-reinstall`.**
+  `linux-firmware` selects files at **build** time and bakes them into
+  `br-firmware.tar`; the install step only extracts that tarball. So enabling
+  e.g. `BR2_PACKAGE_LINUX_FIRMWARE_MEDIATEK_MT7922` and re-running the image
+  build silently produced an image **without** the Wi-Fi firmware, and
+  `linux-firmware-reinstall` re-extracted the stale tarball and changed nothing.
+  `make linux-firmware-rebuild` (or `-dirclean`) regenerates the tarball; verify
+  with `find output/<target>/target/lib/firmware -iname '*MT7922*'` before
+  flashing. Same class of trap applies to any package whose install list is
+  computed from its Kconfig options.
+- **A new package option may pull a large dependency you did not plan for.**
+  `BR2_PACKAGE_WPA_SUPPLICANT_WPA3=y` selects **OpenSSL**, which added ~10 min
+  and ~3 MB to the image. Expected (SAE needs a real crypto backend), but it is
+  worth knowing before wondering why the build suddenly compiles OpenSSL.
 
 ## Partition and filesystem work
 
