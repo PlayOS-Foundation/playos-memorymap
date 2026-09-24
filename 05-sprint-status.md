@@ -519,3 +519,30 @@ entry, live status) and its `TAB_NETWORK` wiring. The T6 client helpers
 (`playos_trusted_*_network*`) are implemented and build clean; only the UI
 remains. T8 (connect → DHCP → WPA3 E2E, trust boundary, reboot persistence)
 follows once the image is installed.
+
+### Sprint 16 T5 — verified on hardware (2026-09-24)
+
+First installed boot after the fix:
+
+    [2.565] [net] waiting for a wireless interface (attempt 1)
+    [4.386] [net] wpa_supplicant launched (PID 381, if=wlp6s0)
+    [4.386] [net] dhcpcd launched (PID 382, if=wlp6s0)
+    [4.386] [net] playos-net launched (PID 383)
+    [4.386] [net] network stack started (if=wlp6s0)
+
+- all three daemons are children of PID 1; `/run/playos/net/` holds
+  `bridge.sock` + `wlp6s0` + `wpa.conf`, owned `root:playos-trusted`
+- **relay works**: `ScanNetworks` sent to **`control.sock`** returned 10 live
+  networks, i.e. shell → init → bridge → wpa_supplicant
+- **restart works**: `kill -9 playos-net` → `playos-net exited: code=-1
+  signal=9` → relaunched ~0.8 s later
+- wpa_supplicant brings the interface `UP` itself (no init-side `ip link` needed)
+
+**The bug this exposed (and why the first install failed):** init sampled
+`/sys/class/net` at 2.552 s but `mt7921e` only creates the interface at 2.916 s,
+so the whole network stack stayed down for the session. Fixed by retrying
+discovery from the 1 Hz housekeeping tick (`playos-init` `7165356`). A one-shot
+probe of anything the kernel creates asynchronously is a bug.
+
+Also fixed while verifying: `wpa_status()` leaked uninitialised stack memory as
+`"ssid"` when disconnected.
