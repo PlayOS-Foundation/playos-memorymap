@@ -7,13 +7,13 @@
 
 | Repo | HEAD |
 |---|---|
-| playos-spec | `2a152b3` spec: pin S16 Wi-Fi firmware to the Ally's MT7922 (internal RZ616) |
-| playos-init | `4f9c599` init: playos.autostart kernel token for the emulator (S15-T7) |
+| playos-spec | `3f9c580` spec: S16 T3+T4 done (playos-net verified on hardware) |
+| playos-init | `7d2d9f9` ipc: network message types (S16-T4) |
 | playos-compositor | `45cbeb0` compositor: report direct scanout (S14 P3) |
 | playos-runtime | `4b6426a` trusted: StartInstaller carries the payload device (S14.5) |
-| playos-refdistro | `453ecb1` versions.lock: bump samples (invaders procedural SFX) |
+| playos-refdistro | `17fac1a` versions.lock: bump init (network IPC types) + spec (S16 T3+T4) |
 | playos-platform-api | `ff6ec10` input(evdev): stop closing device nodes during discovery |
-| playos-shell | `3f25a53` shell: stop leaving the installer screen when the install starts (S14.5) |
+| playos-shell | `c055e26` audio: hand the playback PCM to a foreground game (ADR-0007) |
 | playos-samples | `d662b5f` invaders: procedural SFX (no asset files) |
 | playos-raylib | `dbc56a8` (6.0 tag, pinned in versions.lock) |
 | playos-tools | `ce8f1e9` sdk: implement the emulator profile (S15-T7) |
@@ -463,3 +463,34 @@ has `# CONFIG_WIRELESS is not set` (T1 is real work); no `playos-net` repo exist
 (start it in `playos-refdistro/src/playos-net/`). T8's on-device Wi-Fi checks are
 **hardware-gated** on the Ally's MT7921e; host/QEMU covers T1–T7 and the QEMU
 half of T8.
+
+## Sprint 16 — playos-net (Wi-Fi) — in progress
+
+T1/T2/T3/T4 done; T5–T8 remain.
+
+- **T1 kernel + firmware** — `WIRELESS/CFG80211/MAC80211/RFKILL/WLAN/MT7921E=y`
+  and `LINUX_FIRMWARE_MEDIATEK_MT7922`. Verified on the installed Ally:
+  `mt7921e 0000:06:00.0: ASIC revision: 79220010`, WM firmware loaded, and the
+  interface comes up as **`wlp6s0`** with a `wireless/` dir, rfkill unblocked.
+  (Not `wlan0`/`mlan0` — the spec was corrected.)
+- **T2 packages** — wpa_supplicant with `NL80211/CTRL_IFACE/WPA3/WPA_CLIENT_SO`
+  and **DBUS unset**, plus `wireless-regdb`; `dhcpcd` was already on. The shipped
+  image has `wpa_supplicant`, `libwpa_client.so`, `regulatory.db(.p7s)` and
+  **0 dbus entries**.
+- **T3 daemon** — `src/playos-net/` (`main.c`, `wpa_bridge.c`, `profiles.c`)
+  serves `/run/playos/net/bridge.sock` (`root:playos-trusted` 0660, SO_PEERCRED
+  root-or-GID-1000). Runs against wpa_supplicant's control socket
+  `/run/playos/net/<ifname>`; the interface is discovered from
+  `/sys/class/net/*/wireless`. **Verified on hardware: `ScanNetworks` returned 10
+  live networks with security + dBm.**
+- **T4 IPC** — message strings in `playos-init/ipc/ipc.h` + a `Network control`
+  section in `runtime-ipc.md`.
+
+Gotchas found on the way: Buildroot's `linux-firmware` needs `-rebuild` (not
+`-reinstall`) after adding a firmware option; `_WPA3=y` pulls OpenSSL; and
+wpa_supplicant names its socket after the interface, so `/run/playos/net/wpa.sock`
+does not exist.
+
+Next: **T5** supervise + relay (`control.sock` → bridge, so the shell never
+connects directly), **T6** the settings screen, **T7** is half-done (profiles
+persist and auto-connect inside `playos-net`), **T8** E2E on hardware.
