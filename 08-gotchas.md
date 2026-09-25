@@ -494,3 +494,18 @@ drawn on top of SSIDs, two columns anchored to the same edge, the passphrase mas
 overwriting its own label, and a hint line clipped mid-glyph past the scissor. Each
 had a plausible-looking line of code behind it. If a display is available, look at
 the thing.
+
+## A "minimal full config" hides defaults: the menuconfig was on, the driver was off
+
+`board/ally/linux.config` is applied as the complete kernel `.config`
+(`BR2_LINUX_KERNEL_CUSTOM_CONFIG_FILE`), and it is minimal — anything it does not
+mention takes its Kconfig default. That produced a genuinely confusing state on
+the Ally: `CONFIG_I2C_HID=y` was present in the built `.config` (the symbol is a
+`menuconfig` with `default y`), while the thing that actually binds hardware,
+`CONFIG_I2C_HID_ACPI`, was absent — so the I2C-HID menu looked "enabled" while no
+touchscreen driver existed and all six ACPI input nodes reported `driver=NONE`.
+
+Lesson: to decide whether a driver is present, read the *driver* symbol (or the
+built `vmlinux`), never the menuconfig. The panel was identified by its ACPI
+companion id in the i2c client's modalias (`acpi:NVTK0603:PNP0C50:`) — `PNP0C50`
+is the HID-over-I2C marker and is what `i2c-hid-acpi`'s match table carries.
