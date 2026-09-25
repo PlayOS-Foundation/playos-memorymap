@@ -212,9 +212,8 @@ Sprint 16 closed on 2026-09-24. Remaining before the next sprint:
    and revert on power-cycle. A `.playosb` bundle can be applied remotely through
    the Sprint 11 A/B engine (`/data/updates/` + `ApplyUpdate`), which avoids a
    USB reflash entirely.
-2. **T8's QEMU half** — confirm init gives up gracefully when no radio exists
-   (the emulator defconfig ships no Wi-Fi stack, so the retry-then-stop path is
-   the one to watch).
+2. ~~T8's QEMU half~~ — **done**: dev-mode boot with no radio retries then gives up
+   cleanly at 60, spawning nothing.
 3. Small polish: the list's scroll indicator renders a literal `v`; `hostname`
    is `(none)`.
 4. **Sprint 17 is not yet specified** — the roadmap stops at 16, so the next

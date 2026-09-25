@@ -569,6 +569,14 @@ Two fixes found only by running it: init sampled `/sys/class/net` before
 `mt7921e` created the interface (0.36 s too early), and `wpa_status()` leaked
 uninitialised stack memory as the SSID when disconnected.
 
-**Outstanding:** the QEMU half of T8 (the no-radio path), and an image build —
-T5/T6/T7 plus the `dhcpcd -m 1000 -Z en*` hardening are in the pins but not yet
-in a flashed image.
+**T8's QEMU half is verified too:** a development-mode boot with no wireless NIC
+retries at the designed cadence and gives up cleanly at 60 (`no wireless interface
+after 60 tries`), never spawning a daemon. Note the trap found while testing: the
+emulator image takes the install/live early-out unless a `playos-data` disk is
+attached, and `output/qemu` was a stale build with no `[net]` code at all, so a
+boot check against it says nothing about T5.
+
+**Resolved 2026-09-24:** the image was flashed — the device now runs it
+permanently (running `playos-shell`/`init` hashes match the built
+`rootfs.squashfs` byte for byte, zero bind-mounts, and `/data` survived so the
+Wi-Fi profile auto-connected again).
