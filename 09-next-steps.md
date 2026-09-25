@@ -11,9 +11,9 @@ Sprints 0–15 are complete and verified (14.5 has two parked verification check
 `emulator`. See [`05-sprint-status.md`](05-sprint-status.md) for head SHAs and
 evidence.
 
-## Next up: Sprint 16 — `playos-net` (Wi-Fi)
+## Sprint 16 — `playos-net` (Wi-Fi) — COMPLETE (verified 2026-09-24)
 
-Sprint 16 is **reviewed and realigned but not started** (2026-09-22). It brings
+Sprint 16 is **done and verified on the Ally** — see `05-sprint-status.md`. What follows is kept for the record. It brings
 Wi-Fi up with a D-Bus-free stack — `wpa_supplicant` + `dhcpcd` + a trusted
 `playos-net` bridge — over the existing `control.sock`. Read
 `playos-spec/src/sprints/Sprint-16.md` (its Realignment notes table lists every
@@ -202,3 +202,20 @@ Carried from Sprint 14, unchanged:
    device at all would still need a console text UI.
 6. **Samples don't ack BACKGROUND** — init SIGSTOPs them instead; cosmetic.
 7. **QEMU dev-rig log mismatch** — dev tooling only.
+
+## Next up
+
+Sprint 16 closed on 2026-09-24. Remaining before the next sprint:
+
+1. **An image build + install** — T5/T6/T7 and the init `dhcpcd` hardening are in
+   `versions.lock` but not in a flashed image, so they live in bind-mounts today
+   and revert on power-cycle. A `.playosb` bundle can be applied remotely through
+   the Sprint 11 A/B engine (`/data/updates/` + `ApplyUpdate`), which avoids a
+   USB reflash entirely.
+2. **T8's QEMU half** — confirm init gives up gracefully when no radio exists
+   (the emulator defconfig ships no Wi-Fi stack, so the retry-then-stop path is
+   the one to watch).
+3. Small polish: the list's scroll indicator renders a literal `v`; `hostname`
+   is `(none)`.
+4. **Sprint 17 is not yet specified** — the roadmap stops at 16, so the next
+   step is writing it rather than starting it.

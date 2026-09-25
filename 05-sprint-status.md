@@ -546,3 +546,29 @@ probe of anything the kernel creates asynchronously is a bug.
 
 Also fixed while verifying: `wpa_status()` leaked uninitialised stack memory as
 `"ssid"` when disconnected.
+
+## Sprint 16 — `playos-net` — COMPLETE (2026-09-24)
+
+T1–T8 done and verified on the ROG Ally. Wi-Fi now has a home in the product:
+`wpa_supplicant` (no D-Bus) + `dhcpcd` + the trusted **`playos-net`** bridge,
+supervised by init and reached only through `control.sock` (ADR-0012).
+
+Verified on hardware, not just built:
+
+- a scan through the control plane returns live networks; the Settings → Network
+  screen lists them with signal bars and security
+- **the saved profile auto-connects on boot with no ethernet dock attached** —
+  reachable ~10 s after power-on (this is what makes the Wi-Fi test meaningful,
+  and it also proved the wired link was never disturbed: the wired route keeps
+  metric 0 while Wi-Fi sits at 3003)
+- the trust boundary holds: a uid·gid 1001 probe is refused by `bridge.sock`,
+  `control.sock` and `compositor.sock` (EACCES)
+- init's supervision survives `kill -9` on every daemon
+
+Two fixes found only by running it: init sampled `/sys/class/net` before
+`mt7921e` created the interface (0.36 s too early), and `wpa_status()` leaked
+uninitialised stack memory as the SSID when disconnected.
+
+**Outstanding:** the QEMU half of T8 (the no-radio path), and an image build —
+T5/T6/T7 plus the `dhcpcd -m 1000 -Z en*` hardening are in the pins but not yet
+in a flashed image.

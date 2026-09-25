@@ -472,3 +472,25 @@ Two habits that stop this class of bug:
 - have the helper report the raw return value into the caller's log, so a
   failure is diagnosable from `shell-stderr.log` rather than only from a message
   on screen.
+
+## Verify a redaction by assertion, not by eye
+
+Redacting a screenshot for publication, the first pass left the **first letter of
+every SSID** visible (the blocks started one character too late). A model asked to
+transcribe the image caught it — "M, S, S, S, A, C, C" — which is exactly the kind
+of leak that survives a casual glance.
+
+What worked: after blocking, scan the redacted pixels for any remaining white glyph
+pixels in the redacted regions and fail loudly. Measuring the text's true start
+(first genuinely white pixel; signal bars are green and don't confuse it) beats
+guessing an offset. Proof the right file shipped: the served image was 24 KB, not
+the 100 KB original.
+
+## Screenshot the UI — it catches what reasoning does not
+
+Five layout bugs in the Wi-Fi screen were found by having screenshots read back
+rather than by reading code: type smaller than the surrounding chrome, signal bars
+drawn on top of SSIDs, two columns anchored to the same edge, the passphrase mask
+overwriting its own label, and a hint line clipped mid-glyph past the scissor. Each
+had a plausible-looking line of code behind it. If a display is available, look at
+the thing.
