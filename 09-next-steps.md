@@ -216,5 +216,9 @@ Sprint 16 closed on 2026-09-24. Remaining before the next sprint:
    cleanly at 60, spawning nothing.
 3. Small polish: the list's scroll indicator renders a literal `v`; `hostname`
    is `(none)`.
+5. **Parked: Wi-Fi passphrase hardening** — profiles hold the PSK in plaintext
+   (`0600 root`) on unencrypted `/data`: invisible to games and never logged, but
+   readable with the disk in hand. Recorded in `Sprint-16.md` → Parked and
+   `security-model.md` §12. Not a Wi-Fi feature — it is a secrets-at-rest decision.
 4. **Sprint 17 is not yet specified** — the roadmap stops at 16, so the next
    step is writing it rather than starting it.
