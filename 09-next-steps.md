@@ -205,17 +205,25 @@ Carried from Sprint 14, unchanged:
 
 ## Next up
 
-**Touch is done and verified on a clean install** (2026-09-26): kernel driver, compositor input
-stack, platform-API touch API, raylib `GetTouchPosition()` and the `touch-demo` sample all ship in
-the image and work together. See the map's status file and Sprint 17.
+**Sprint 22 (LVGL shell spike) is done and verified on the Ally (2026-09-26)** — Path 1
+confirmed: LVGL renders into a raylib texture, controller navigation works, frame cost
+unchanged. See the sprint's result section for the measurements and the two open items
+(partial-upload rendering, and the shell's own ~8 fps UI pacing).
 
-Next, in order:
+Next:
 
-1. **Sprint 22 - LVGL spike** (validate Path 1: LVGL as a widget layer over raylib). Start with
-   T1: vendor LVGL v9 behind `PLAYOS_SHELL_EXPERIMENTAL_LVGL`; then the `flush_cb` -> texture
-   backend, `lv_gridnav` controller navigation, and the 60 fps verdict. This needs no device.
-2. **The OSK** - overlay-rendered, built from LVGL's keyboard/textarea, driven by a PlayOS
-   text-entry API. Comes after the spike, because the spike supplies the widget layer.
-3. **Flash when convenient** - the wired-DHCP fix (`init df4d843` + the `eth*/en*` metric in
-   `/etc/dhcpcd.conf`) is committed but not in the installed image, so the dock port has no lease
-   until the next build. Wi-Fi works meanwhile.
+1. **The OSK** (Sprint 17's remaining half) — overlay-rendered, built from LVGL's
+   keyboard/textarea, driven by a PlayOS text-entry API. The spike now supplies the
+   widget layer and the working render path, which is why it came first.
+2. **The shell's 8 fps UI pacing** — measured, pre-existing, and untouched by the spike.
+   Worth its own look before anything is judged against a 60 fps target.
+3. **Partial-upload rendering** (`LV_DISPLAY_RENDER_MODE_PARTIAL` + `glTexSubImage2D`) —
+   the one piece of the spike's performance story left unexercised, since a static screen
+   flushes once.
+4. **Pins + flash when convenient** — `versions.lock` needs the spike commits, and the
+   wired-DHCP fix (`init df4d843`) is still not in an installed image.
+
+Dev note: `BR2_PACKAGE_PLAYOS_SHELL_LVGL_SPIKE=y` sits in the dev ally defconfig on
+purpose (the OSK will want it); the production defconfig stays clean. The spike shell is
+running on the device via a bind-mount plus `/data/config/lvgl-spike`; both clear on
+reboot.
