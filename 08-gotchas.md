@@ -601,3 +601,13 @@ handshake appears to hang. **`reboot -f` works.** Two attempts with plain `reboo
 before this was noticed, and both *looked* successful (the command returned cleanly, the device
 stayed reachable), which is exactly the failure mode this file exists to catch: a command that
 reports success and changes nothing.
+
+## `/usr/lib/libraylib.so` comes from `playos-raylib`, not from the shell's vendored copy
+
+Changing `playos-shell/external/raylib` and rebuilding `playos-shell` updates the *shell's*
+private build only. The library that games and the shell load at runtime is installed by the
+separate `playos-raylib` package, so a raylib change reaches the device only after
+`playos-raylib-rebuild`. Symptom of getting this wrong: a game runs, draws its own background,
+and simply never sees input - the mapping it depends on is not in the library it loaded. Found by
+reading `readelf -d` on the test binary and the shipped game (identical NEEDED lists, so the
+difference was the library's *age*, not its name) and `ls -l` on the installed file.
