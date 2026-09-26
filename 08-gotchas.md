@@ -659,3 +659,16 @@ The shell's `shell_input_button_pressed()` is an edge that is true for a single 
 keypad device expects a *level* ("pressed while held"). Feeding an edge to a device that reads on a
 timer drops presses at random - the operator hears the shell's beep and the focus does not move. Use
 the level accessor (`shell_input_button_held`) for anything driven from a periodic read.
+
+### ...and the *closure*, not just the direct list
+
+Checking the shell's own `NEEDED` entries was not enough: `liblvgl.so.9` needs
+`liblvgl_thorvg.so.9`, so the staged shell still failed to load - with a message naming the
+*library's* dependency, not the binary's. Walk the closure (or just stage everything the
+package installed) before mounting anything over a system path.
+
+The package itself was correct throughout: `playos-lvgl` installs both libraries into the
+image. What failed was my staging of them, twice, in the same way - which is the actual
+lesson: a package's value is in the image, and hand-staging a package's output is exactly
+where this kind of mistake lives.
+
