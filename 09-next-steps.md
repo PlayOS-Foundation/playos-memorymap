@@ -205,33 +205,17 @@ Carried from Sprint 14, unchanged:
 
 ## Next up
 
-**Direction settled 2026-09-26** (ADR-0013 + the ADR-0006 amendment): console model, every app
-SDK-built, no foreign Wayland clients; the shell's UI is **raylib + LVGL (Path 1)**; input and
-text entry belong to the platform API; the OSK is overlay-rendered.
+**Touch is done and verified on a clean install** (2026-09-26): kernel driver, compositor input
+stack, platform-API touch API, raylib `GetTouchPosition()` and the `touch-demo` sample all ship in
+the image and work together. See the map's status file and Sprint 17.
 
-Order:
+Next, in order:
 
-1. **Sprint 22 — LVGL spike**, now validating Path 1 (60 fps, correctness) rather than choosing.
-   The shell is the product's identity, so this comes before more hand-drawn UI.
-2. **Sprint 17 re-scoped** — touch in the platform API, keyboard/mouse for PC, the overlay OSK
-   and the text-entry API.
-3. **Marketplace**, starting with an ADR for app packaging/signing/update.
-
-
-Sprint 16 closed on 2026-09-24. Remaining before the next sprint:
-
-1. **An image build + install** — T5/T6/T7 and the init `dhcpcd` hardening are in
-   `versions.lock` but not in a flashed image, so they live in bind-mounts today
-   and revert on power-cycle. A `.playosb` bundle can be applied remotely through
-   the Sprint 11 A/B engine (`/data/updates/` + `ApplyUpdate`), which avoids a
-   USB reflash entirely.
-2. ~~T8's QEMU half~~ — **done**: dev-mode boot with no radio retries then gives up
-   cleanly at 60, spawning nothing.
-3. Small polish: the list's scroll indicator renders a literal `v`; `hostname`
-   is `(none)`.
-5. **Parked: Wi-Fi passphrase hardening** — profiles hold the PSK in plaintext
-   (`0600 root`) on unencrypted `/data`: invisible to games and never logged, but
-   readable with the disk in hand. Recorded in `Sprint-16.md` → Parked and
-   `security-model.md` §12. Not a Wi-Fi feature — it is a secrets-at-rest decision.
-4. **Sprint 17 is not yet specified** — the roadmap stops at 16, so the next
-   step is writing it rather than starting it.
+1. **Sprint 22 - LVGL spike** (validate Path 1: LVGL as a widget layer over raylib). Start with
+   T1: vendor LVGL v9 behind `PLAYOS_SHELL_EXPERIMENTAL_LVGL`; then the `flush_cb` -> texture
+   backend, `lv_gridnav` controller navigation, and the 60 fps verdict. This needs no device.
+2. **The OSK** - overlay-rendered, built from LVGL's keyboard/textarea, driven by a PlayOS
+   text-entry API. Comes after the spike, because the spike supplies the widget layer.
+3. **Flash when convenient** - the wired-DHCP fix (`init df4d843` + the `eth*/en*` metric in
+   `/etc/dhcpcd.conf`) is committed but not in the installed image, so the dock port has no lease
+   until the next build. Wi-Fi works meanwhile.
