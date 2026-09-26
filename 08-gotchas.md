@@ -585,3 +585,19 @@ the spawn and whatever the launcher made of it.
 
 The lesson that did hold: verify a claim before writing it down. This entry was first committed
 asserting the static/dynamic cause, which the very next command disproved.
+
+## Recovering a broken session: reboot, don't restart the compositor
+
+Restarting the compositor (and then the shell, which survives a dead connection holding its old
+pid) does bring the shell back from a stuck game-foreground state - but it leaves the trusted
+session broken: the overlay process never re-registers, so the Armoury button stops raising the
+menu and its press reaches the game instead. The designed ordering (init -> compositor -> shell
+-> overlay) only happens at boot. **Reboot instead**; it takes about a minute.
+
+## On this image, plain `reboot` does not reboot
+
+`/sbin/reboot` (busybox) returns immediately and leaves the uptime unchanged - the shutdown
+handshake appears to hang. **`reboot -f` works.** Two attempts with plain `reboot` were made
+before this was noticed, and both *looked* successful (the command returned cleanly, the device
+stayed reachable), which is exactly the failure mode this file exists to catch: a command that
+reports success and changes nothing.
