@@ -547,3 +547,21 @@ protocol), prove that structure is populated — a debug print of the root's chi
 tracked-clients list took one build and settled it. Related: `WLR_BACKENDS=drm` had disabled the
 libinput backend for every target since the beginning, which is why *no* input device ever
 reached the compositor until it was found.
+
+## Three ways a deploy silently doesn't happen
+
+Verifying touch on the Ally cost four attempts, and every failure was a *deploy* failure that
+looked like a code failure. All three are now checks, not hopes:
+
+1. **`pkill -f <pattern>` matches its own command line.** `pkill -f /data/touchprobe` killed the
+   ssh session running it, so the `cat > /data/touchprobe` that followed never executed - the
+   device kept running the *old* binary while the log looked plausible. Use `kill $(pidof name)`
+   or `pkill -x name` (exact match).
+2. **A background process launched inside a tool call dies with that call**, `nohup`/`setsid`
+   notwithstanding - and over Dropbear its session tree goes with it too. A liveness check
+   performed *inside the launching session* is therefore meaningless: it passes, then the
+   process dies. Use the harness's background mode, and confirm liveness from an *independent*
+   connection afterwards.
+3. **Compare hashes after every deploy.** `md5sum` on both sides (or `sha256sum /proc/<pid>/exe`
+   for a running process) is the only proof that the bytes you built are the bytes running. Two
+   of the four attempts would have been caught instantly by this one line.
