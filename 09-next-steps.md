@@ -215,8 +215,9 @@ Next:
 1. **The OSK** (Sprint 17's remaining half) — overlay-rendered, built from LVGL's
    keyboard/textarea, driven by a PlayOS text-entry API. The spike now supplies the
    widget layer and the working render path, which is why it came first.
-2. **The shell's 8 fps UI pacing** — measured, pre-existing, and untouched by the spike.
-   Worth its own look before anything is judged against a 60 fps target.
+2. **The shell's 8 fps UI pacing — answered, not a defect.** It is the idle policy: full rate while
+   busy, a slow redraw interval when nothing is happening, to save power. The consequence to carry
+   into the OSK is that animated UI must mark the shell busy while visible. See Sprint 22's result.
 3. **Partial-upload rendering** (`LV_DISPLAY_RENDER_MODE_PARTIAL` + `glTexSubImage2D`) —
    the one piece of the spike's performance story left unexercised, since a static screen
    flushes once.
