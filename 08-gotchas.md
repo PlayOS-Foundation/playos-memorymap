@@ -629,3 +629,33 @@ The lesson is narrower than "test more": when a change's *comment* states an int
 *code* cannot deliver, that gap is the bug. Read the comment against the mechanism, not next to
 it. Both this and the `WLR_BACKENDS` line failed the same way - one line whose stated purpose and
 actual effect were opposites.
+
+## LVGL: three ways the build fights you, and one about colours
+
+Found while vendoring LVGL v9.5.0 for the shell spike. All cost a build cycle each:
+
+1. **`env_support/` must stay.** A "strip the docs" tidy-up that also removes `env_support` breaks the
+   CMake configure step: LVGL's `CMakeLists.txt` includes files from it. Strip only
+   `demos/docs/examples/tests/zephyr`.
+2. **`lv_conf.h` belongs at the top-level project directory.** LVGL's `os_desktop.cmake` looks for
+   `${CMAKE_SOURCE_DIR}/lv_conf.h` and fails with "Configuration file: ... - not found" otherwise. A
+   symlink from the project root to the vendored file satisfies it.
+3. **`LV_USE_DRAW_SW_ASM=NONE`, and remove the ARM `.S` files.** The default auto-detected the ARM
+   Helium blend on an x86-64 cross build, and LVGL's source *glob* still collected
+   `src/draw/sw/blend/helium/*.S` after the config was set. Deleting them is correct for an x86-64
+   target, not a workaround.
+
+And the colour one, which no build flag fixes:
+
+4. **LVGL's `RGB888` is stored B,G,R in memory**; raylib's `PIXELFORMAT_UNCOMPRESSED_R8G8B8` is R,G,B.
+   Uploading one into the other swaps red and blue - the spike's "RED" block came out blue until the
+   `flush_cb` swapped the outer channels. Related trap: uploading 3-byte pixels into a 4-byte RGBA
+   texture makes the fourth byte come from the next pixel's red, which for a dark UI is ~0 - a fully
+   transparent sprite, i.e. nothing on screen at all rather than anything obviously wrong.
+
+## A periodic timer sampling an edge misses taps
+
+The shell's `shell_input_button_pressed()` is an edge that is true for a single shell frame; LVGL's
+keypad device expects a *level* ("pressed while held"). Feeding an edge to a device that reads on a
+timer drops presses at random - the operator hears the shell's beep and the focus does not move. Use
+the level accessor (`shell_input_button_held`) for anything driven from a periodic read.
