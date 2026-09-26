@@ -565,3 +565,19 @@ looked like a code failure. All three are now checks, not hopes:
 3. **Compare hashes after every deploy.** `md5sum` on both sides (or `sha256sum /proc/<pid>/exe`
    for a running process) is the only proof that the bytes you built are the bytes running. Two
    of the four attempts would have been caught instantly by this one line.
+
+## Games must be statically linked — and a game that dies before presenting hangs the session
+
+Two findings from a failed raylib touch demo, both worth keeping:
+
+1. **A dynamically linked game dies before it draws.** The shipped games are static musl
+   binaries; a demo linked against `/usr/lib/libraylib.so` + `libplayos.so` was killed on
+   startup, because the game sandbox's Landlock default-deny stops the dynamic loader from
+   opening its libraries. The user saw only the compositor's background - the demo never
+   created a surface. Build games with the SDK's toolchain and `-static`.
+2. **A game that exits before it presents leaves the session stuck in game-foreground.** With
+   no surface and no crash event to observe, the compositor kept the shell suppressed and the
+   screen stayed on the compositor's background colour; killing the game process did not
+   recover it. Restarting the compositor (and then the shell, which survives a dead connection
+   with its old pid) brought the UI back. The fix belongs in the state machine: a launch that
+   never produces a surface should time out back to the shell rather than waiting forever.
