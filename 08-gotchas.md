@@ -611,3 +611,21 @@ separate `playos-raylib` package, so a raylib change reaches the device only aft
 and simply never sees input - the mapping it depends on is not in the library it loaded. Found by
 reading `readelf -d` on the test binary and the shipped game (identical NEEDED lists, so the
 difference was the library's *age*, not its name) and `ls -l` on the installed file.
+
+## A hardening flag that disabled a documented workflow
+
+Sprint 16's Wi-Fi work hardened dhcpcd with `-Z en* -Z eth*` plus a single-interface
+invocation, commented as "dhcpcd may not touch a wired NIC at all - it is the developer's link to
+the device". The intent was to leave the wired link undisturbed; the effect was that the wired
+port **never received a lease at all**, so a freshly installed device on a dock was unreachable
+over Ethernet. The image's own `/etc/dhcpcd.conf` even documents wired SSH as a supported
+workflow, and an earlier "the wired interface is gone" observation was blamed on the dock cable
+instead of on this change.
+
+Fixed by letting dhcpcd manage every NIC and giving `eth*`/`en*` `metric 2000` in
+`/etc/dhcpcd.conf`, so wired works while Wi-Fi still wins the default route.
+
+The lesson is narrower than "test more": when a change's *comment* states an intent that the
+*code* cannot deliver, that gap is the bug. Read the comment against the mechanism, not next to
+it. Both this and the `WLR_BACKENDS` line failed the same way - one line whose stated purpose and
+actual effect were opposites.
