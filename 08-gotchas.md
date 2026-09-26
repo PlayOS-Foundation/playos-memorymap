@@ -509,3 +509,20 @@ Lesson: to decide whether a driver is present, read the *driver* symbol (or the
 built `vmlinux`), never the menuconfig. The panel was identified by its ACPI
 companion id in the i2c client's modalias (`acpi:NVTK0603:PNP0C50:`) — `PNP0C50`
 is the HID-over-I2C marker and is what `i2c-hid-acpi`'s match table carries.
+
+## The emulator image has no input devices (no session, so no libinput)
+
+Booting the minimal emulator image with `virtio-keyboard-pci`,
+`virtio-mouse-pci` and `virtio-tablet-pci` and injecting events over QMP gives
+the guest compositor **nothing**: not my new pointer path, but also not the
+pre-existing keyboard attach line from `system_button.c`. That control is what
+made the diagnosis certain — the failure was not in the code under test.
+
+Cause: wlroots only creates its libinput backend when it has a session
+(seatd/logind), and the slim emulator image ships none. So input cannot be
+verified in QEMU as the image stands, `virtio-*` input devices included.
+
+Two consequences worth remembering: (1) a "should be testable in QEMU" claim needs
+the same evidence as any other; (2) wlr_log output does not reach the serial
+console — the compositor's log is `/data/log/compositor-stderr.log` inside the
+data image, read with `debugfs` after replaying the journal on a copy.
