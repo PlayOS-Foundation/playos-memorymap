@@ -531,3 +531,19 @@ Two transferable points: a "should be testable" claim needs evidence like any
 other, and wlr_log output does not reach the serial console — the compositor's log
 is `/data/log/compositor-stderr.log` in the data image, read with `debugfs` after
 replaying the journal on a copy.
+
+## A compositor's scene is not necessarily where its content lives
+
+Designing touch input, the assumption was that client surfaces are `wlr_scene` nodes and can be
+hit-tested with `wlr_scene_node_at`. Measurement said otherwise on the Ally: the scene held only
+a full-screen background rect, `toplevels=0` while the shell was rendering, and
+`playos_overlay_v1::set_surface` turned out to be a stub. PlayOS clients do not present as
+Wayland surfaces at all — input reaches them through `libplayos` → evdev, and presentation is
+zero-copy through the compositor's own path.
+
+Cost: a session spent building seat forwarding that could never fire, plus a sprint re-scope.
+Lesson: before designing anything on top of a framework's structure (scene graph, seat,
+protocol), prove that structure is populated — a debug print of the root's children and the
+tracked-clients list took one build and settled it. Related: `WLR_BACKENDS=drm` had disabled the
+libinput backend for every target since the beginning, which is why *no* input device ever
+reached the compositor until it was found.

@@ -205,6 +205,19 @@ Carried from Sprint 14, unchanged:
 
 ## Next up
 
+**Direction settled 2026-09-26** (ADR-0013 + the ADR-0006 amendment): console model, every app
+SDK-built, no foreign Wayland clients; the shell's UI is **raylib + LVGL (Path 1)**; input and
+text entry belong to the platform API; the OSK is overlay-rendered.
+
+Order:
+
+1. **Sprint 22 — LVGL spike**, now validating Path 1 (60 fps, correctness) rather than choosing.
+   The shell is the product's identity, so this comes before more hand-drawn UI.
+2. **Sprint 17 re-scoped** — touch in the platform API, keyboard/mouse for PC, the overlay OSK
+   and the text-entry API.
+3. **Marketplace**, starting with an ADR for app packaging/signing/update.
+
+
 Sprint 16 closed on 2026-09-24. Remaining before the next sprint:
 
 1. **An image build + install** — T5/T6/T7 and the init `dhcpcd` hardening are in
