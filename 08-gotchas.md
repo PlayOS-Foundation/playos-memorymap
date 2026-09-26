@@ -510,19 +510,24 @@ built `vmlinux`), never the menuconfig. The panel was identified by its ACPI
 companion id in the i2c client's modalias (`acpi:NVTK0603:PNP0C50:`) — `PNP0C50`
 is the HID-over-I2C marker and is what `i2c-hid-acpi`'s match table carries.
 
-## The emulator image has no input devices (no session, so no libinput)
+## WLR_BACKENDS replaces auto-detection — `drm` alone means no libinput
 
-Booting the minimal emulator image with `virtio-keyboard-pci`,
-`virtio-mouse-pci` and `virtio-tablet-pci` and injecting events over QMP gives
-the guest compositor **nothing**: not my new pointer path, but also not the
-pre-existing keyboard attach line from `system_button.c`. That control is what
-made the diagnosis certain — the failure was not in the code under test.
+`playos-compositor/src/drm_backend.c` set `WLR_BACKENDS=drm` to avoid a nested or
+headless backend being picked. But that variable *replaces* wlroots'
+auto-detection rather than adding to it, so the libinput backend was never created
+and the compositor received **no input devices at all** — on every target, since
+forever. pointer, touch and keyboard alike.
 
-Cause: wlroots only creates its libinput backend when it has a session
-(seatd/logind), and the slim emulator image ships none. So input cannot be
-verified in QEMU as the image stands, `virtio-*` input devices included.
+How it looked: the Ally had a bound touchscreen (`event5`), running udevd, and
+libseat opening a seat fine (`Seat opened with backend 'builtin'`), yet
+`/data/log/compositor-stderr.log` showed zero attaches — including zero keyboard
+attaches, which is the control that proves the fault is upstream of any device.
 
-Two consequences worth remembering: (1) a "should be testable in QEMU" claim needs
-the same evidence as any other; (2) wlr_log output does not reach the serial
-console — the compositor's log is `/data/log/compositor-stderr.log` inside the
-data image, read with `debugfs` after replaying the journal on a copy.
+It also explains the emulator receiving nothing when virtio-keyboard/mouse/tablet
+were attached. An earlier version of this entry blamed a missing session there;
+that was wrong, and the `drm,libinput` fix covers both.
+
+Two transferable points: a "should be testable" claim needs evidence like any
+other, and wlr_log output does not reach the serial console — the compositor's log
+is `/data/log/compositor-stderr.log` in the data image, read with `debugfs` after
+replaying the journal on a copy.
