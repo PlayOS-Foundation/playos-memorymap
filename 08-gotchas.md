@@ -672,3 +672,29 @@ image. What failed was my staging of them, twice, in the same way - which is the
 lesson: a package's value is in the image, and hand-staging a package's output is exactly
 where this kind of mistake lives.
 
+## A file can be committed 87% smaller and still look fine
+
+`playos-init/src/supervisor.c` was committed as a 278-line fragment instead of 2174
+lines. The errors that followed pointed everywhere except at the cause: first a syntax
+error inside the fragment (a comment containing `en*/`, whose `*/` closed the block early,
+plus a function left with unbalanced braces), then undefined references once that was
+patched, because the functions themselves were gone.
+
+What found it was comparing line counts across commits:
+
+    git show <older>:path/to/file | wc -l
+    git show <newer>:path/to/file | wc -l
+
+Now automated: **`playos-tools/tools/check-large-deletions.sh`** flags any file that loses
+more than half its content (and at least 100 lines) in a commit or in the staged set, and
+is installed as a `pre-commit` hook in every playos repo. Override a deliberate big
+deletion with `PLAYOS_ALLOW_BIG_DELETE=1`.
+
+Two related traps from the same incident, both worth remembering:
+
+- **`src/playos-init` is a symlink to `../../playos-init`**, not a clone, so a
+  `git checkout <sha>` under `src/` moves the *real* repository and detaches its HEAD.
+  Two commits were made on a detached HEAD that way and were nearly lost.
+- **`make ...-dirclean` does not always refresh a local package's copied source.** Removing
+  `output/<target>/build/<pkg>-*` is what finally re-extracted it - the build had been
+  compiling a stale 285-line copy while the source said 2174.
